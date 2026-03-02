@@ -15,6 +15,8 @@ class CampusMapPage extends StatefulWidget {
 }
 
 class _CampusMapPageState extends State<CampusMapPage> {
+  // TODO: Move this API key to secure storage or env configuration
+  static const String _openCageApiKey = '576381e588954489941327b67c04aca6';
   final MapController _mapController = MapController();
   final TextEditingController _searchController = TextEditingController();
   bool _searching = false;
@@ -230,20 +232,27 @@ class _CampusMapPageState extends State<CampusMapPage> {
     }
     _debounceTimer = Timer(const Duration(milliseconds: 500), () async {
       try {
-        final uri = Uri.parse('https://nominatim.openstreetmap.org/search')
-            .replace(queryParameters: {
-          'q': query,
-          'format': 'json',
-          'limit': '5',
-        });
-        final res = await http.get(uri, headers: {
-          'User-Agent': 'SafePathCampus/1.0 (your_email@example.com)'
-        });
+        final uri = Uri.https(
+          'api.opencagedata.com',
+          '/geocode/v1/json',
+          {
+            'key': _openCageApiKey,
+            'q': query,
+            'limit': '5',
+            'no_annotations': '1',
+          },
+        );
+        final res = await http.get(uri);
         if (res.statusCode == 200 && mounted) {
-          final List results = jsonDecode(res.body);
+          final Map<String, dynamic> data =
+              jsonDecode(res.body) as Map<String, dynamic>;
+          final List results =
+              (data['results'] as List? ?? <dynamic>[]);
           setState(() {
             _suggestions = results.cast<Map<String, dynamic>>();
           });
+        } else {
+          debugPrint('suggestions http error: ${res.statusCode}');
         }
       } catch (e) {
         debugPrint('suggestions fetch error: $e');
@@ -256,27 +265,58 @@ class _CampusMapPageState extends State<CampusMapPage> {
     if (query.isEmpty) {
       return;
     }
+
+    // If we already have suggestions for this query, prefer using the first
+    // suggestion directly so hitting "Enter" behaves like choosing the top
+    // result in the list (similar to Google Maps).
+    if (_suggestions.isNotEmpty) {
+      final first = _suggestions.first;
+      final geometry = first['geometry'] as Map<String, dynamic>?;
+      final lat = (geometry?['lat'] as num?)?.toDouble();
+      final lon = (geometry?['lng'] as num?)?.toDouble();
+      if (lat != null && lon != null) {
+        final dest = LatLng(lat, lon);
+        await _setDestination(dest);
+        _mapController.move(dest, 16);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Destination set from search')),
+          );
+        }
+        setState(() {
+          _suggestions = [];
+        });
+        return;
+      }
+    }
     setState(() {
       _searching = true;
       _suggestions = [];
     });
 
     try {
-      final uri = Uri.parse('https://nominatim.openstreetmap.org/search')
-          .replace(queryParameters: {
-        'q': query,
-        'format': 'json',
-        'limit': '1',
-      });
-      final res = await http.get(uri, headers: {
-        'User-Agent': 'SafePathCampus/1.0 (your_email@example.com)'
-      });
+      final uri = Uri.https(
+        'api.opencagedata.com',
+        '/geocode/v1/json',
+        {
+          'key': _openCageApiKey,
+          'q': query,
+          'limit': '1',
+          'no_annotations': '1',
+        },
+      );
+      final res = await http.get(uri);
       if (res.statusCode == 200) {
-        final List results = jsonDecode(res.body);
+        final Map<String, dynamic> data =
+            jsonDecode(res.body) as Map<String, dynamic>;
+        final List results =
+            (data['results'] as List? ?? <dynamic>[]);
         if (results.isNotEmpty) {
-          final first = results.first;
-          final lat = double.tryParse(first['lat']?.toString() ?? '');
-          final lon = double.tryParse(first['lon']?.toString() ?? '');
+          final first = results.first as Map<String, dynamic>;
+          final geometry =
+              first['geometry'] as Map<String, dynamic>?;
+          final lat = (geometry?['lat'] as num?)?.toDouble();
+          final lon = (geometry?['lng'] as num?)?.toDouble();
           if (lat != null && lon != null) {
             final dest = LatLng(lat, lon);
             _setDestination(dest);
@@ -442,13 +482,16 @@ class _CampusMapPageState extends State<CampusMapPage> {
                         shrinkWrap: true,
                         itemCount: _suggestions.length,
                         itemBuilder: (ctx, idx) {
-                          final sugg = _suggestions[idx];
+                          final sugg =
+                              _suggestions[idx] as Map<String, dynamic>;
                           final name =
-                              sugg['display_name'] as String? ?? 'Unknown';
+                              sugg['formatted'] as String? ?? 'Unknown';
+                          final geometry = sugg['geometry']
+                              as Map<String, dynamic>?;
                           final lat =
-                              double.tryParse(sugg['lat']?.toString() ?? '');
+                              (geometry?['lat'] as num?)?.toDouble();
                           final lon =
-                              double.tryParse(sugg['lon']?.toString() ?? '');
+                              (geometry?['lng'] as num?)?.toDouble();
                           return ListTile(
                             leading:
                                 const Icon(Icons.location_on, size: 20),
