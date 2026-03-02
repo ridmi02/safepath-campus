@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../utils/validators.dart';
-import '../../viewmodels/auth_provider.dart';
+import 'registration_provider.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});

@@ -3,10 +3,10 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
-import '../models/user_model.dart';
-import '../services/auth_service.dart';
-import '../services/firestore_service.dart';
-import '../services/storage_service.dart';
+import '../../models/user_model.dart';
+import '../../services/auth_service.dart';
+import '../../services/firestore_service.dart';
+import '../../services/storage_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();

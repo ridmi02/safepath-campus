@@ -3,8 +3,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 
 import 'firebase_options.dart';
-import 'viewmodels/auth_provider.dart';
-import 'views/screens/registration_screen.dart';
+import 'features/registration/registration_provider.dart';
+import 'features/registration/registration_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
