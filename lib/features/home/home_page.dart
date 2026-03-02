@@ -143,10 +143,10 @@ class MyHomePage extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: _FeatureCard(
-                          icon: Icons.person,
-                          label: 'My Profile',
+                          icon: Icons.directions_walk,
+                          label: 'The Companion',
                           onTap: () {
-                            // TODO: navigate to My Profile
+                            Navigator.of(context).pushNamed('/companion');
                           },
                         ),
                       ),
