@@ -28,6 +28,7 @@ class _CampusMapPageState extends State<CampusMapPage> {
   LatLng? _destination;
   List<LatLng> _routePoints = [];
   bool _loadingRoute = false;
+  double? _routeDistanceKm;
 
   @override
   void initState() {
@@ -65,6 +66,7 @@ class _CampusMapPageState extends State<CampusMapPage> {
       _destination = point;
       _loadingRoute = true;
       _routePoints = [];
+      _routeDistanceKm = null;
     });
 
     if (_currentLocation == null) {
@@ -101,8 +103,12 @@ class _CampusMapPageState extends State<CampusMapPage> {
                 .map<LatLng>((c) =>
                     LatLng((c[1] as num).toDouble(), (c[0] as num).toDouble()))
                 .toList();
+
+            final routeDistanceKm = _computeRouteDistanceKm(pts);
+
             setState(() {
               _routePoints = pts;
+              _routeDistanceKm = routeDistanceKm;
             });
             if (pts.isNotEmpty) {
               _mapController.fitBounds(
@@ -121,6 +127,91 @@ class _CampusMapPageState extends State<CampusMapPage> {
     setState(() {
       _loadingRoute = false;
     });
+  }
+
+  double _computeRouteDistanceKm(List<LatLng> points) {
+    if (points.length < 2) return 0;
+    final distance = Distance();
+    double totalMeters = 0;
+    for (var i = 0; i < points.length - 1; i++) {
+      totalMeters += distance(points[i], points[i + 1]);
+    }
+    return totalMeters / 1000.0;
+  }
+
+  String _formatMinutes(double minutes) {
+    final intMinutes = minutes.round();
+    return '$intMinutes min';
+  }
+
+  Widget _buildTravelTimeCard() {
+    if (_routeDistanceKm == null || _routeDistanceKm == 0) {
+      return const SizedBox.shrink();
+    }
+
+    // simple averages
+    const walkingSpeedKmh = 5.0;
+    const cyclingSpeedKmh = 15.0;
+    const drivingSpeedKmh = 40.0;
+
+    final distance = _routeDistanceKm!;
+    final walkingMinutes = (distance / walkingSpeedKmh) * 60.0;
+    final cyclingMinutes = (distance / cyclingSpeedKmh) * 60.0;
+    final drivingMinutes = (distance / drivingSpeedKmh) * 60.0;
+
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 140),
+        child: Material(
+          elevation: 4,
+          borderRadius: BorderRadius.circular(12),
+          color: Colors.white.withOpacity(0.9),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Estimated travel time (${distance.toStringAsFixed(1)} km)',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.directions_walk, size: 20),
+                        const SizedBox(width: 4),
+                        Text(_formatMinutes(walkingMinutes)),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        const Icon(Icons.directions_bike, size: 20),
+                        const SizedBox(width: 4),
+                        Text(_formatMinutes(cyclingMinutes)),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        const Icon(Icons.directions_car, size: 20),
+                        const SizedBox(width: 4),
+                        Text(_formatMinutes(drivingMinutes)),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _centerOnUser() async {
@@ -401,6 +492,8 @@ class _CampusMapPageState extends State<CampusMapPage> {
                 ),
               ),
             ),
+          if (_routeDistanceKm != null && !_loadingRoute)
+            _buildTravelTimeCard(),
         ],
       ),
       floatingActionButton: Column(
