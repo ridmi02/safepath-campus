@@ -1,24 +1,20 @@
-﻿// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:safepath_campus/main.dart';
 
 void main() {
-  testWidgets('Home page displays SafePath features', (WidgetTester tester) async {
+  testWidgets('Splash screen displays with logo', (WidgetTester tester) async {
     await tester.pumpWidget(const MyApp());
-    await tester.pumpAndSettle();
+    await tester.pump(); // Let the first frame render
 
-    // Should show the app title and feature cards
-    expect(find.text('SafePath Campus'), findsOneWidget);
-    expect(find.text('Report Incident'), findsOneWidget);
-    expect(find.text('Campus Map'), findsOneWidget);
-    expect(find.text('Emergency Contacts'), findsOneWidget);
-    expect(find.text('My Profile'), findsOneWidget);
+    // Verify splash screen elements are present
+    expect(find.text('SafePath'), findsWidgets);
+    expect(find.text('Campus Safety'), findsOneWidget);
+    expect(find.byIcon(Icons.security), findsOneWidget);
+    expect(find.byIcon(Icons.location_on), findsOneWidget);
+
+    // Pump through the 7-second delay for navigation
+    // (in real app this would navigate to home, in test it catches the error)
+    await tester.pumpAndSettle(const Duration(seconds: 7));
   });
 }
