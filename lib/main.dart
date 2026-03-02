@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'campus_map.dart';
 
 void main() {
   runApp(const MyApp());
@@ -87,6 +88,7 @@ class MyApp extends StatelessWidget {
       home: const SplashScreen(),
       routes: {
         '/home': (context) => const MyHomePage(),
+        '/campus_map': (context) => const CampusMapPage(),
       },
     );
   }
@@ -190,28 +192,42 @@ class MyHomePage extends StatelessWidget {
               child: Column(
                 children: [
                   Row(
-                    children: const [
+                    children: [
                       Expanded(
                           child: _FeatureCard(
                               icon: Icons.warning,
-                              label: 'Report Incident')),
-                      SizedBox(width: 12),
+                              label: 'Report Incident',
+                              onTap: () {
+                                // TODO: navigate to Report Incident
+                              })),
+                      const SizedBox(width: 12),
                       Expanded(
                           child: _FeatureCard(
-                              icon: Icons.map, label: 'Campus Map')),
+                              icon: Icons.map,
+                              label: 'Campus Map',
+                              onTap: () {
+                                Navigator.of(context).pushNamed('/campus_map');
+                              })),
                     ],
                   ),
                   const SizedBox(height: 12),
                   Row(
-                    children: const [
+                    children: [
                       Expanded(
                           child: _FeatureCard(
                               icon: Icons.phone,
-                              label: 'Emergency Contacts')),
-                      SizedBox(width: 12),
+                              label: 'Emergency Contacts',
+                              onTap: () {
+                                // TODO: navigate to Emergency Contacts
+                              })),
+                      const SizedBox(width: 12),
                       Expanded(
                           child: _FeatureCard(
-                              icon: Icons.person, label: 'My Profile')),
+                              icon: Icons.person,
+                              label: 'My Profile',
+                              onTap: () {
+                                // TODO: navigate to My Profile
+                              })),
                     ],
                   ),
                 ],
@@ -227,8 +243,9 @@ class MyHomePage extends StatelessWidget {
 class _FeatureCard extends StatelessWidget {
   final IconData icon;
   final String label;
+  final VoidCallback? onTap;
 
-  const _FeatureCard({required this.icon, required this.label});
+  const _FeatureCard({required this.icon, required this.label, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -241,9 +258,7 @@ class _FeatureCard extends StatelessWidget {
       elevation: 4,
       color: cardBg,
       child: InkWell(
-        onTap: () {
-          // TODO: navigate to feature
-        },
+        onTap: onTap,
         borderRadius: BorderRadius.circular(8),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
