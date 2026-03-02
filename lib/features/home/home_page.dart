@@ -32,6 +32,15 @@ class MyHomePage extends StatelessWidget {
         centerTitle: true,
         actions: [
           IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: () {
+              // TODO: Navigate to My Profile page
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('My Profile (coming soon)')),
+              );
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
               Navigator.of(context).pushNamed('/settings');
@@ -109,16 +118,6 @@ class MyHomePage extends StatelessWidget {
                     children: [
                       Expanded(
                         child: _FeatureCard(
-                          icon: Icons.warning,
-                          label: 'Report Incident',
-                          onTap: () {
-                            // TODO: navigate to Report Incident
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _FeatureCard(
                           icon: Icons.map,
                           label: 'Campus Map',
                           onTap: () {
@@ -126,27 +125,13 @@ class MyHomePage extends StatelessWidget {
                           },
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
+                      const SizedBox(width: 12),
                       Expanded(
                         child: _FeatureCard(
                           icon: Icons.phone,
                           label: 'Emergency Contacts',
                           onTap: () {
                             // TODO: navigate to Emergency Contacts
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _FeatureCard(
-                          icon: Icons.person,
-                          label: 'My Profile',
-                          onTap: () {
-                            // TODO: navigate to My Profile
                           },
                         ),
                       ),

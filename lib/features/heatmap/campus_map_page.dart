@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
+import 'package:safepath_campus/models/incident.dart';
+import 'package:safepath_campus/services/incident_service.dart';
 import 'package:safepath_campus/services/location_service.dart';
 
 class CampusMapPage extends StatefulWidget {
@@ -22,6 +24,12 @@ class _CampusMapPageState extends State<CampusMapPage> {
   bool _searching = false;
   List<Map<String, dynamic>> _suggestions = [];
   Timer? _debounceTimer;
+
+  final IncidentService _incidentService = const IncidentService();
+  List<Incident> _allIncidents = [];
+
+  Set<IncidentType> _selectedIncidentTypes = IncidentType.values.toSet();
+  _IncidentTimeFilter _timeFilter = _IncidentTimeFilter.last7Days;
 
   final LocationService _locationService = LocationService();
   StreamSubscription<LatLng>? _locationSubscription;
@@ -43,6 +51,10 @@ class _CampusMapPageState extends State<CampusMapPage> {
 
     setState(() {
       _currentLocation = _locationService.currentLocation;
+      if (_currentLocation != null && _allIncidents.isEmpty) {
+        _allIncidents =
+            _incidentService.buildMockIncidents(around: _currentLocation!);
+      }
     });
 
     _locationSubscription =
@@ -50,8 +62,321 @@ class _CampusMapPageState extends State<CampusMapPage> {
       if (!mounted) return;
       setState(() {
         _currentLocation = location;
+        if (_allIncidents.isEmpty) {
+          _allIncidents = _incidentService.buildMockIncidents(around: location);
+        }
       });
     });
+  }
+
+  List<Incident> get _filteredIncidents {
+    final now = DateTime.now();
+    final cutoff = _timeFilter.cutoff(now);
+
+    return _allIncidents.where((inc) {
+      if (!_selectedIncidentTypes.contains(inc.type)) return false;
+      if (cutoff != null && inc.timestamp.isBefore(cutoff)) return false;
+      return true;
+    }).toList();
+  }
+
+  void _openIncidentFilters() {
+    final currentTypes = _selectedIncidentTypes;
+    final currentTime = _timeFilter;
+
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) {
+        var tempTypes = Set<IncidentType>.from(currentTypes);
+        var tempTime = currentTime;
+
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Incident filters',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Type',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: IncidentType.values.map((t) {
+                      final selected = tempTypes.contains(t);
+                      return FilterChip(
+                        label: Text(t.label),
+                        selected: selected,
+                        onSelected: (v) {
+                          setModalState(() {
+                            if (v) {
+                              tempTypes.add(t);
+                            } else {
+                              tempTypes.remove(t);
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Time',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _IncidentTimeFilter.values.map((f) {
+                      final selected = tempTime == f;
+                      return ChoiceChip(
+                        label: Text(f.label),
+                        selected: selected,
+                        onSelected: (_) {
+                          setModalState(() {
+                            tempTime = f;
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      TextButton(
+                        onPressed: () {
+                          setModalState(() {
+                            tempTypes = IncidentType.values.toSet();
+                            tempTime = _IncidentTimeFilter.last7Days;
+                          });
+                        },
+                        child: const Text('Reset'),
+                      ),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(),
+                        child: const Text('Cancel'),
+                      ),
+                      const SizedBox(width: 8),
+                      FilledButton(
+                        onPressed: () {
+                          setState(() {
+                            _selectedIncidentTypes = tempTypes.isEmpty
+                                ? IncidentType.values.toSet()
+                                : tempTypes;
+                            _timeFilter = tempTime;
+                          });
+                          Navigator.of(ctx).pop();
+                        },
+                        child: const Text('Apply'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Color _incidentColor(Incident incident) {
+    switch (incident.severity) {
+      case IncidentSeverity.low:
+        return Colors.amber;
+      case IncidentSeverity.medium:
+        return Colors.orange;
+      case IncidentSeverity.high:
+        return Colors.redAccent;
+    }
+  }
+
+  void _showIncidentDetails(Incident incident) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 8),
+              Text(
+                incident.type.label,
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Severity: ${incident.severity.name}',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 4),
+              Text('Verified: ${incident.verified ? 'Yes' : 'No'}'),
+              const SizedBox(height: 4),
+              Text('Time: ${incident.timestamp}'),
+              if (incident.description != null) ...[
+                const SizedBox(height: 12),
+                Text(incident.description!),
+              ],
+              const SizedBox(height: 12),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _openReportIncident(LatLng point) {
+    final now = DateTime.now();
+    IncidentType selectedType = IncidentType.harassment;
+    IncidentSeverity selectedSeverity = IncidentSeverity.medium;
+    final descriptionController = TextEditingController();
+
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 8),
+              const Text(
+                'Report incident',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Type',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              StatefulBuilder(
+                builder: (context, setModalState) {
+                  return DropdownButton<IncidentType>(
+                    isExpanded: true,
+                    value: selectedType,
+                    items: IncidentType.values
+                        .map(
+                          (t) => DropdownMenuItem(
+                            value: t,
+                            child: Text(t.label),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (val) {
+                      if (val == null) return;
+                      setModalState(() {
+                        selectedType = val;
+                      });
+                    },
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Severity',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              StatefulBuilder(
+                builder: (context, setModalState) {
+                  return Wrap(
+                    spacing: 8,
+                    children: IncidentSeverity.values.map((s) {
+                      final selected = selectedSeverity == s;
+                      return ChoiceChip(
+                        label: Text(s.name),
+                        selected: selected,
+                        onSelected: (_) {
+                          setModalState(() {
+                            selectedSeverity = s;
+                          });
+                        },
+                      );
+                    }).toList(),
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Description (optional)',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: descriptionController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  hintText: 'Briefly describe what happened',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    child: const Text('Cancel'),
+                  ),
+                  const Spacer(),
+                  FilledButton(
+                    onPressed: () {
+                      final incident = Incident(
+                        id: 'user_${now.microsecondsSinceEpoch}',
+                        type: selectedType,
+                        severity: selectedSeverity,
+                        location: point,
+                        timestamp: now,
+                        description: descriptionController.text.trim().isEmpty
+                            ? null
+                            : descriptionController.text.trim(),
+                        verified: false,
+                      );
+                      setState(() {
+                        _allIncidents = [..._allIncidents, incident];
+                      });
+                      Navigator.of(ctx).pop();
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Incident reported'),
+                          ),
+                        );
+                      }
+                    },
+                    child: const Text('Submit'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -168,7 +493,7 @@ class _CampusMapPageState extends State<CampusMapPage> {
         child: Material(
           elevation: 4,
           borderRadius: BorderRadius.circular(12),
-          color: Colors.white.withOpacity(0.9),
+          color: Colors.white.withAlpha((0.9 * 255).round()),
           child: Padding(
             padding: const EdgeInsets.all(12.0),
             child: Column(
@@ -382,6 +707,30 @@ class _CampusMapPageState extends State<CampusMapPage> {
         ),
       );
     }
+    for (final incident in _filteredIncidents) {
+      markers.add(
+        Marker(
+          point: incident.location,
+          width: 32,
+          height: 32,
+          builder: (ctx) => GestureDetector(
+            onTap: () => _showIncidentDetails(incident),
+            child: Container(
+              decoration: BoxDecoration(
+                color: _incidentColor(incident),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+              ),
+              child: const Icon(
+                Icons.report,
+                size: 16,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     final polylines = <Polyline>[];
     if (_routePoints.isNotEmpty) {
@@ -408,6 +757,9 @@ class _CampusMapPageState extends State<CampusMapPage> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Destination set')),
                 );
+              },
+              onLongPress: (tapPos, point) {
+                _openReportIncident(point);
               },
             ),
             children: [
@@ -469,6 +821,11 @@ class _CampusMapPageState extends State<CampusMapPage> {
                                 _searchController.clear();
                               },
                             ),
+                      IconButton(
+                        tooltip: 'Incident filters',
+                        icon: const Icon(Icons.tune),
+                        onPressed: _openIncidentFilters,
+                      ),
                     ],
                   ),
                 ),
@@ -482,8 +839,7 @@ class _CampusMapPageState extends State<CampusMapPage> {
                         shrinkWrap: true,
                         itemCount: _suggestions.length,
                         itemBuilder: (ctx, idx) {
-                          final sugg =
-                              _suggestions[idx] as Map<String, dynamic>;
+                          final sugg = _suggestions[idx];
                           final name =
                               sugg['formatted'] as String? ?? 'Unknown';
                           final geometry = sugg['geometry']
@@ -567,6 +923,41 @@ class _CampusMapPageState extends State<CampusMapPage> {
         ],
       ),
     );
+  }
+}
+
+enum _IncidentTimeFilter {
+  last24Hours,
+  last7Days,
+  last30Days,
+  all,
+}
+
+extension _IncidentTimeFilterX on _IncidentTimeFilter {
+  String get label {
+    switch (this) {
+      case _IncidentTimeFilter.last24Hours:
+        return '24h';
+      case _IncidentTimeFilter.last7Days:
+        return '7d';
+      case _IncidentTimeFilter.last30Days:
+        return '30d';
+      case _IncidentTimeFilter.all:
+        return 'All';
+    }
+  }
+
+  DateTime? cutoff(DateTime now) {
+    switch (this) {
+      case _IncidentTimeFilter.last24Hours:
+        return now.subtract(const Duration(hours: 24));
+      case _IncidentTimeFilter.last7Days:
+        return now.subtract(const Duration(days: 7));
+      case _IncidentTimeFilter.last30Days:
+        return now.subtract(const Duration(days: 30));
+      case _IncidentTimeFilter.all:
+        return null;
+    }
   }
 }
 
