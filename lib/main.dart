@@ -96,6 +96,17 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatelessWidget {
   const MyHomePage({super.key});
 
+  void _triggerSOS(BuildContext context) {
+    // TODO: Implement SOS emergency action
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('SOS Emergency Alert Sent!'),
+        backgroundColor: Color(0xFFE63946),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -134,7 +145,47 @@ class MyHomePage extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
+            // SOS Emergency Button - Big Circular Button in Center
+            Center(
+              child: GestureDetector(
+                onTap: () => _triggerSOS(context),
+                child: Container(
+                  width: 160,
+                  height: 160,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFFE63946),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFE63946).withAlpha((0.4 * 255).round()),
+                        blurRadius: 20,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => _triggerSOS(context),
+                      customBorder: const CircleBorder(),
+                      child: const Center(
+                        child: Text(
+                          'SOS',
+                          style: TextStyle(
+                            fontSize: 52,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFFFFFFFF),
+                            letterSpacing: 2,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 32),
             Expanded(
               child: Column(
                 children: [
