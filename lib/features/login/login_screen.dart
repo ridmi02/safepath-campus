@@ -42,6 +42,15 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordController.text,
       );
 
+      // ignore: avoid_print
+      print("=== AUTH SUCCESS ===");
+      // ignore: avoid_print
+      print("UID: ${user.uid}");
+      // ignore: avoid_print
+      print("Email: ${user.email}");
+      // ignore: avoid_print
+      print("=== NOW FETCHING FIRESTORE DOC ===");
+
       // Step 2: Get user document from Firestore
       final firestoreService = FirestoreService();
       final UserModel? userModel =
@@ -51,12 +60,17 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       if (userModel == null) {
+        // User authenticated but has no Firestore profile
+        // This happens for manually created accounts
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Invalid email or password.'),
-            backgroundColor: Colors.red,
+            content: Text('Account exists but profile not found. Please register through the app.'),
+            backgroundColor: Colors.orange,
           ),
         );
+        // Sign out since they don't have a complete profile
+        await authService.signOut();
+        setState(() => _isLoading = false);
         return;
       }
 
@@ -87,6 +101,14 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } catch (e) {
+      // ignore: avoid_print
+      print("=== HANDLE LOGIN ERROR ===");
+      // ignore: avoid_print
+      print("Caught error: $e");
+      // ignore: avoid_print
+      print("Error type: ${e.runtimeType}");
+      // ignore: avoid_print
+      print("=== END ERROR ===");
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

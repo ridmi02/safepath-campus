@@ -42,8 +42,26 @@ class AuthService {
       }
       return credential.user!;
     } on FirebaseAuthException catch (e) {
+      // ignore: avoid_print
+      print("=== LOGIN DEBUG ===");
+      // ignore: avoid_print
+      print("Error type: ${e.runtimeType}");
+      // ignore: avoid_print
+      print("Error code: ${e.code}");
+      // ignore: avoid_print
+      print("Error message: ${e.message}");
+      // ignore: avoid_print
+      print("=== END DEBUG ===");
       throw _mapAuthException(e);
     } catch (e) {
+      // ignore: avoid_print
+      print("=== LOGIN DEBUG (non-Firebase) ===");
+      // ignore: avoid_print
+      print("Error type: ${e.runtimeType}");
+      // ignore: avoid_print
+      print("Error: $e");
+      // ignore: avoid_print
+      print("=== END DEBUG ===");
       throw 'An unexpected error occurred. Please try again.';
     }
   }

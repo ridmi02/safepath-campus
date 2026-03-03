@@ -20,14 +20,27 @@ class FirestoreService {
   /// Retrieves a [UserModel] by [uid]. Returns null if the document doesn't exist.
   Future<UserModel?> getUserDocument(String uid) async {
     try {
-      final DocumentSnapshot<Map<String, dynamic>> doc =
-          await _usersCollection.doc(uid).get();
+      // ignore: avoid_print
+      print("=== FIRESTORE: Fetching document for UID: $uid ===");
+      final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      // ignore: avoid_print
+      print("=== FIRESTORE: Document exists: ${doc.exists} ===");
+
       if (!doc.exists || doc.data() == null) {
+        // ignore: avoid_print
+        print("=== FIRESTORE: No document found for this user ===");
         return null;
       }
+
+      // ignore: avoid_print
+      print("=== FIRESTORE: Document data: ${doc.data()} ===");
       return UserModel.fromMap(doc.data()!);
     } catch (e) {
-      throw 'Failed to retrieve user profile. Please try again.';
+      // ignore: avoid_print
+      print("=== FIRESTORE ERROR: $e ===");
+      // ignore: avoid_print
+      print("=== FIRESTORE ERROR TYPE: ${e.runtimeType} ===");
+      rethrow;
     }
   }
 
