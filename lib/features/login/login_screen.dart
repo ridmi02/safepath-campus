@@ -4,6 +4,7 @@ import '../../models/user_model.dart';
 import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
 import '../../utils/validators.dart';
+import '../admin/admin_dashboard_screen.dart';
 import '../registration/registration_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -74,6 +75,18 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
+      // Check if user is admin
+      if (userModel.role == 'admin') {
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) => const AdminDashboardScreen()),
+        );
+        return;
+      }
+
+      // Then continue with existing student verification check...
       if (userModel.verificationStatus == 'verified') {
         // Navigate to Home Screen
         // TODO: Replace with actual home screen route later

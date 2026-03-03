@@ -9,6 +9,7 @@ class UserModel {
   final String? rejectionReason;
   final String idCardImageUrl;
   final DateTime createdAt;
+  final String role; // 'student', 'admin'
 
   UserModel({
     required this.uid,
@@ -19,6 +20,7 @@ class UserModel {
     this.rejectionReason,
     required this.idCardImageUrl,
     required this.createdAt,
+    this.role = 'student',
   });
 
   /// Converts the [UserModel] to a Map for Firestore storage.
@@ -32,6 +34,7 @@ class UserModel {
       'rejectionReason': rejectionReason,
       'idCardImageUrl': idCardImageUrl,
       'createdAt': Timestamp.fromDate(createdAt),
+      'role': role,
     };
   }
 
@@ -46,6 +49,7 @@ class UserModel {
       rejectionReason: map['rejectionReason'] as String?,
       idCardImageUrl: map['idCardImageUrl'] as String,
       createdAt: (map['createdAt'] as Timestamp).toDate(),
+      role: map['role'] as String? ?? 'student',
     );
   }
 
