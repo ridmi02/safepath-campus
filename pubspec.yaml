@@ -11,18 +11,35 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
+  # ── feature/admin branch ───────────────────────────────────
   firebase_core: ^3.12.1
   firebase_auth: ^5.5.1
   cloud_firestore: ^5.6.5
   firebase_storage: ^12.4.4
-  provider: ^6.1.2
   image_picker: ^1.1.2
+  # ── origin/main branch ────────────────────────────────────
+  flutter_map: ^4.0.0
+  latlong2: ^0.8.2
+  geolocator: ^9.0.2
+  http: ^0.13.6
+  # ── shared — kept higher version (^6.1.2 > ^6.0.0) ───────
+  provider: ^6.1.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
   flutter_lints: ^6.0.0
+  # ── origin/main branch ────────────────────────────────────
+  flutter_launcher_icons: ^0.14.1
 
 flutter:
   uses-material-design: true
+
+flutter_launcher_icons:
+  image_path: "assets/icon/icon.png"
+  android: true
+  ios: true
+  web:
+    generate: true
+    background_color: "#0D1B2A"
