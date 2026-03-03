@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 
 import 'firebase_options.dart';
+import 'features/login/login_screen.dart';
 import 'features/registration/registration_provider.dart';
 import 'features/registration/registration_screen.dart';
 
@@ -32,6 +33,7 @@ class MyApp extends StatelessWidget {
         ),
         home: const WelcomeScreen(),
         routes: {
+          LoginScreen.routeName: (context) => const LoginScreen(),
           '/register': (context) => const RegistrationScreen(),
         },
       ),
@@ -107,7 +109,7 @@ class WelcomeScreen extends StatelessWidget {
                 height: 48,
                 child: OutlinedButton(
                   onPressed: () {
-                    // TODO: Navigate to login screen
+                    Navigator.pushNamed(context, LoginScreen.routeName);
                   },
                   child: const Text('Login'),
                 ),
