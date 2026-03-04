@@ -10,10 +10,26 @@ class FirestoreService {
 
   /// Creates a new user document in Firestore using the user's [uid] as the document ID.
   Future<void> createUserDocument(UserModel user) async {
+    // ignore: avoid_print
+    print("=== FIRESTORE: createUserDocument called for UID: ${user.uid} ===");
+    // ignore: avoid_print
+    print("=== FIRESTORE: Data to write: ${user.toMap()} ===");
     try {
       await _usersCollection.doc(user.uid).set(user.toMap());
-    } catch (e) {
-      throw 'Failed to create user profile. Please try again.';
+      // ignore: avoid_print
+      print("=== FIRESTORE: Document written successfully for UID: ${user.uid} ===");
+    } catch (e, stackTrace) {
+      // ignore: avoid_print
+      print("=== FIRESTORE createUserDocument ERROR ===");
+      // ignore: avoid_print
+      print("Error: $e");
+      // ignore: avoid_print
+      print("Type: ${e.runtimeType}");
+      // ignore: avoid_print
+      print("Stack: $stackTrace");
+      // ignore: avoid_print
+      print("=== END FIRESTORE createUserDocument ERROR ===");
+      throw 'Failed to create user profile: $e';
     }
   }
 

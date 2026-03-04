@@ -5,6 +5,7 @@ import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
 import '../../utils/validators.dart';
 import '../admin/admin_dashboard_screen.dart';
+import '../home/home_page.dart';
 import '../registration/registration_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -88,14 +89,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // Then continue with existing student verification check...
       if (userModel.verificationStatus == 'verified') {
-        // Navigate to Home Screen
-        // TODO: Replace with actual home screen route later
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login successful! Status: Verified'),
-            backgroundColor: Colors.green,
-          ),
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MyHomePage()),
         );
+        return;
       } else if (userModel.verificationStatus == 'pending') {
         // Navigate to Pending Screen (we will create this next)
         ScaffoldMessenger.of(context).showSnackBar(

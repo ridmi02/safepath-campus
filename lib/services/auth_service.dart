@@ -11,6 +11,8 @@ class AuthService {
   /// Registers a new user with [email] and [password].
   /// Returns the [User] on success, or throws an error message string.
   Future<User> registerWithEmail(String email, String password) async {
+    // ignore: avoid_print
+    print("=== AUTH: registerWithEmail called for: $email ===");
     try {
       final UserCredential credential =
           await _auth.createUserWithEmailAndPassword(
@@ -18,12 +20,34 @@ class AuthService {
         password: password,
       );
       if (credential.user == null) {
+        // ignore: avoid_print
+        print("=== AUTH: createUserWithEmailAndPassword returned null user ===");
         throw 'Registration failed. Please try again.';
       }
+      // ignore: avoid_print
+      print("=== AUTH: Auth account created. UID: ${credential.user!.uid} ===");
       return credential.user!;
     } on FirebaseAuthException catch (e) {
+      // ignore: avoid_print
+      print("=== AUTH REGISTRATION FirebaseAuthException ===");
+      // ignore: avoid_print
+      print("Code: ${e.code}");
+      // ignore: avoid_print
+      print("Message: ${e.message}");
+      // ignore: avoid_print
+      print("=== END AUTH REGISTRATION FirebaseAuthException ===");
       throw _mapAuthException(e);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      // ignore: avoid_print
+      print("=== AUTH REGISTRATION unexpected error ===");
+      // ignore: avoid_print
+      print("Error: $e");
+      // ignore: avoid_print
+      print("Type: ${e.runtimeType}");
+      // ignore: avoid_print
+      print("Stack: $stackTrace");
+      // ignore: avoid_print
+      print("=== END AUTH REGISTRATION unexpected error ===");
       throw 'An unexpected error occurred. Please try again.';
     }
   }

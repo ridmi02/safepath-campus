@@ -56,6 +56,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
   Future<void> _handleRegister() async {
+    // ignore: avoid_print
+    print("=== SCREEN: _handleRegister called ===");
+
     // Validate image separately
     if (_idCardImage == null) {
       setState(() {
@@ -64,8 +67,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     }
 
     if (!_formKey.currentState!.validate() || _idCardImage == null) {
+      // ignore: avoid_print
+      print("=== SCREEN: Validation failed — form invalid or no image ===");
       return;
     }
+
+    // ignore: avoid_print
+    print("=== SCREEN: Validation passed. Calling authProvider.register() ===");
 
     final authProvider = context.read<AuthProvider>();
 
@@ -77,13 +85,27 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       idCardImage: _idCardImage!,
     );
 
+    // ignore: avoid_print
+    print("=== SCREEN: authProvider.register() returned: $success ===");
+    // ignore: avoid_print
+    print("=== SCREEN: authProvider.error = ${authProvider.error} ===");
+
     if (!mounted) return;
 
     if (success) {
+      // Check if there was a non-fatal upload warning
+      final hasWarning = authProvider.error != null;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Registration successful! Your account is pending verification.'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: Text(
+            hasWarning
+                ? authProvider.error!
+                : 'Registration successful! Your account is pending verification.',
+          ),
+          backgroundColor: hasWarning ? Colors.orange : Colors.green,
+          duration: hasWarning
+              ? const Duration(seconds: 5)
+              : const Duration(seconds: 3),
         ),
       );
       // Navigate away or pop — adjust to your routing setup
