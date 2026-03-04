@@ -1,121 +1,219 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
 
-void main() {
-  runApp(const MyApp());
+import 'firebase_options.dart';
+import 'features/login/login_screen.dart';
+import 'features/registration/registration_provider.dart';
+import 'features/registration/registration_screen.dart';
+import 'features/home/home_page.dart';
+import 'features/home/splash_screen.dart';
+import 'features/settings/data_sharing_policy_page.dart';
+import 'features/settings/settings_page.dart';
+import 'features/heatmap/campus_map_page.dart';
+import 'theme/theme_provider.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+    // Brand colors (from origin/main)
+    const backgroundColor = Color(0xFF0D1B2A);
+    const cardColor = Color(0xFF1B263B);
+    const titleTextColor = Color(0xFFFFFFFF);
+    const bodyTextColor = Color(0xFFC9D6DF);
+    const disabledColorVal = Color(0xFF7F8C8D);
+    const safeColor = Color(0xFF2ECC71);
+    const warningColor = Color(0xFFF4D35E);
+    const dangerColor = Color(0xFFE63946);
+    const primaryIconColor = Color(0xFF3A86FF);
+
+    final lightScheme = ColorScheme.fromSeed(seedColor: primaryIconColor)
+        .copyWith(
+      surface: cardColor,
+      onSurface: bodyTextColor,
+      secondary: safeColor,
+      tertiary: warningColor,
+      error: dangerColor,
+      brightness: Brightness.light,
+    );
+
+    final darkScheme = ColorScheme.fromSeed(
+      seedColor: primaryIconColor,
+      brightness: Brightness.dark,
+    ).copyWith(
+      surface: cardColor,
+      onSurface: bodyTextColor,
+      secondary: safeColor,
+      tertiary: warningColor,
+      error: dangerColor,
+    );
+
+    final lightTheme = ThemeData(
+      colorScheme: lightScheme,
+      useMaterial3: true,
+      scaffoldBackgroundColor: backgroundColor,
+      iconTheme: const IconThemeData(color: primaryIconColor),
+      primaryIconTheme: const IconThemeData(color: primaryIconColor),
+      textTheme: const TextTheme(
+        titleLarge: TextStyle(
+            color: titleTextColor,
+            fontSize: 20,
+            fontWeight: FontWeight.w600),
+        bodyMedium: TextStyle(color: bodyTextColor),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      disabledColor: disabledColorVal,
+      appBarTheme: AppBarTheme(
+        backgroundColor: lightScheme.primary,
+        foregroundColor: titleTextColor,
+      ),
+    );
+
+    final darkTheme = ThemeData(
+      colorScheme: darkScheme,
+      useMaterial3: true,
+      scaffoldBackgroundColor: backgroundColor,
+      iconTheme: const IconThemeData(color: primaryIconColor),
+      primaryIconTheme: const IconThemeData(color: primaryIconColor),
+      textTheme: const TextTheme(
+        titleLarge: TextStyle(
+            color: titleTextColor,
+            fontSize: 20,
+            fontWeight: FontWeight.w600),
+        bodyMedium: TextStyle(color: bodyTextColor),
+      ),
+      disabledColor: disabledColorVal,
+      appBarTheme: AppBarTheme(
+        backgroundColor: darkScheme.primary,
+        foregroundColor: titleTextColor,
+      ),
+    );
+
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp(
+          title: 'SafePath Campus',
+          debugShowCheckedModeBanner: false,
+          theme: lightTheme,
+          darkTheme: darkTheme,
+          themeMode: themeProvider.themeMode,
+          // WelcomeScreen is the entry point; it routes to LoginScreen,
+          // which then handles all post-login navigation (admin / student).
+          home: const WelcomeScreen(),
+          routes: {
+            // ── feature/admin routes ─────────────────────────────
+            LoginScreen.routeName: (context) => const LoginScreen(),
+            '/register': (context) => const RegistrationScreen(),
+            // ── origin/main routes ───────────────────────────────
+            '/home': (context) => const MyHomePage(),
+            '/splash': (context) => const SplashScreen(),
+            '/campus_map': (context) => const CampusMapPage(),
+            '/settings': (context) => const SettingsPage(),
+            '/data_sharing_policy': (context) =>
+                const DataSharingPolicyPage(),
+          },
+        );
+      },
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+// ── WelcomeScreen (from feature/admin) ──────────────────────────────────────
+class WelcomeScreen extends StatelessWidget {
+  const WelcomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Spacer(flex: 2),
+
+              // ── App Icon ───────────────────────────────────────
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.shield_outlined,
+                  size: 64,
+                  color: colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // ── Title ─────────────────────────────────────────
+              Text(
+                'SafePath Campus',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.primary,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Your safety companion on campus',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+              ),
+
+              const Spacer(flex: 3),
+
+              // ── Register Button ────────────────────────────────
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: FilledButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/register');
+                  },
+                  child: const Text('Register'),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // ── Login Button ───────────────────────────────────
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: OutlinedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, LoginScreen.routeName);
+                  },
+                  child: const Text('Login'),
+                ),
+              ),
+
+              const Spacer(),
+            ],
+          ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
       ),
     );
   }
