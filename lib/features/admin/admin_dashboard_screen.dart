@@ -86,7 +86,24 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
-                  return const Center(child: Text('Error loading users'));
+                  // ignore: avoid_print
+                  print("=== ADMIN DASHBOARD ERROR ===");
+                  // ignore: avoid_print
+                  print("Error: ${snapshot.error}");
+                  // ignore: avoid_print
+                  print("Error type: ${snapshot.error.runtimeType}");
+                  // ignore: avoid_print
+                  print("=== END ADMIN ERROR ===");
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        "Error: ${snapshot.error}",
+                        style: const TextStyle(color: Colors.red),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
                 }
                 final users = snapshot.data ?? [];
                 if (users.isEmpty) {

@@ -5,28 +5,36 @@ class AdminService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Get all students (exclude admin accounts)
+  // Sorted client-side to avoid requiring a composite Firestore index
   Stream<List<UserModel>> getAllStudents() {
     return _firestore
         .collection('users')
         .where('role', isEqualTo: 'student')
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => UserModel.fromMap(doc.data()))
-            .toList());
+        .map((snapshot) {
+          final users = snapshot.docs
+              .map((doc) => UserModel.fromMap(doc.data()))
+              .toList();
+          users.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return users;
+        });
   }
 
   // Get students filtered by verification status
+  // Sorted client-side to avoid requiring a composite Firestore index
   Stream<List<UserModel>> getStudentsByStatus(String status) {
     return _firestore
         .collection('users')
         .where('role', isEqualTo: 'student')
         .where('verificationStatus', isEqualTo: status)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => UserModel.fromMap(doc.data()))
-            .toList());
+        .map((snapshot) {
+          final users = snapshot.docs
+              .map((doc) => UserModel.fromMap(doc.data()))
+              .toList();
+          users.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return users;
+        });
   }
 
   // Approve a student
