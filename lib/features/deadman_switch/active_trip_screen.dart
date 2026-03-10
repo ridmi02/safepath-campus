@@ -4,6 +4,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:vibration/vibration.dart';
 import '../../models/trip_model.dart';
 import '../../models/sos_log_model.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'alert_sent_screen.dart';
 import 'deadman_service.dart';
 
 class ActiveTripScreen extends StatefulWidget {
@@ -276,8 +278,20 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
     setState(() => _isLoading = true);
 
     try {
+      // Update trip with latest location before alert
+      final updatedTrip = _currentTrip.copyWith(
+        lastKnownLat: _currentLat,
+        lastKnownLng: _currentLng,
+        lastLocationUpdate: DateTime.now(),
+        status: 'alert_triggered',
+        alertSent: true,
+        alertSentAt: DateTime.now(),
+      );
+
+      // Mark alert in Firestore
       await DeadmanService().markAlertSent(_currentTrip.tripId);
 
+      // Create SOS log
       await DeadmanService().createSosLog(SosLogModel(
         logId: '',
         userId: _currentTrip.userId,
@@ -288,7 +302,7 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
         destination: _currentTrip.destination,
         emergencyContactName: _currentTrip.emergencyContactName,
         emergencyContactPhone: _currentTrip.emergencyContactPhone,
-        contactNotified: false,
+        contactNotified: true,
       ));
 
       print(
@@ -296,13 +310,15 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('ALERT SENT to emergency contact!'),
-          backgroundColor: Colors.red,
-        ),
+      // Auto-open SMS to send alert
+      _autoSendSms();
+
+      // Navigate to Alert Sent Screen
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (_) => AlertSentScreen(trip: updatedTrip)),
       );
-      Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (e) {
       print("=== DEADMAN: Alert trigger error: $e ===");
       if (!mounted) return;
@@ -314,6 +330,32 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _autoSendSms() async {
+    final phone = _currentTrip.emergencyContactPhone;
+    final locationText = _currentLat != null
+        ? 'https://www.google.com/maps?q=$_currentLat,$_currentLng'
+        : 'Location not available';
+
+    final message = 'EMERGENCY ALERT from SafePath Campus!\n\n'
+        'Student needs help.\n'
+        'Destination: ${_currentTrip.destination}\n'
+        'Last known location: $locationText\n'
+        'Trip started at: ${_currentTrip.startTime.hour.toString().padLeft(2, '0')}:${_currentTrip.startTime.minute.toString().padLeft(2, '0')}\n'
+        'Alert triggered because student did not respond to check-in.\n\n'
+        'Please check on them immediately.';
+
+    final uri =
+        Uri.parse('sms:$phone?body=${Uri.encodeComponent(message)}');
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+        print("=== DEADMAN: SMS app opened automatically ===");
+      }
+    } catch (e) {
+      print("=== DEADMAN: Auto SMS error: $e ===");
     }
   }
 
