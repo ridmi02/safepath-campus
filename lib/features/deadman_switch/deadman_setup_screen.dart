@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/trip_model.dart';
 import '../../services/auth_service.dart';
+import 'active_trip_screen.dart';
 import 'deadman_service.dart';
 
 class DeadmanSetupScreen extends StatefulWidget {
@@ -82,14 +83,12 @@ class _DeadmanSetupScreenState extends State<DeadmanSetupScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Trip started! Active screen coming next.'),
-          backgroundColor: Colors.green,
-        ),
-      );
-
       print("=== DEADMAN: Trip started successfully. ID: ${createdTrip.tripId} ===");
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => ActiveTripScreen(trip: createdTrip)),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
