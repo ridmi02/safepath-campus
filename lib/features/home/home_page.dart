@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:safepath_campus/services/firebase_service.dart';
+import '../deadman_switch/deadman_setup_screen.dart';
 
 class MyHomePage extends StatelessWidget {
   const MyHomePage({super.key});
@@ -151,6 +152,31 @@ class MyHomePage extends StatelessWidget {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 12),
+                  Card(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                    elevation: 4,
+                    color: Colors.orange.withOpacity(0.15),
+                    child: ListTile(
+                      leading: const Icon(Icons.shield,
+                          color: Colors.orange, size: 32),
+                      title: const Text(
+                        "Deadman's Switch",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle:
+                          const Text('Start a safety timer for your trip'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const DeadmanSetupScreen()),
+                        );
+                      },
+                    ),
                   ),
                 ],
               ),
