@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
@@ -17,8 +18,8 @@ class CampusMapPage extends StatefulWidget {
 }
 
 class _CampusMapPageState extends State<CampusMapPage> {
-  // TODO: Move this API key to secure storage or env configuration
-  static const String _openCageApiKey = '576381e588954489941327b67c04aca6';
+  final String _openCageApiKey = dotenv.env['OPENCAGE_API_KEY'] ?? '';
+  final String _mapboxApiKey = dotenv.env['MAPBOX_API_KEY'] ?? '';
   final MapController _mapController = MapController();
   final TextEditingController _searchController = TextEditingController();
   bool _searching = false;
@@ -359,6 +360,7 @@ class _CampusMapPageState extends State<CampusMapPage> {
                       setState(() {
                         _allIncidents = [..._allIncidents, incident];
                       });
+                      _incidentService.saveIncident(incident);
                       Navigator.of(ctx).pop();
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -763,12 +765,23 @@ class _CampusMapPageState extends State<CampusMapPage> {
               },
             ),
             children: [
-              TileLayer(
-                urlTemplate:
-                    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                subdomains: const ['a', 'b', 'c'],
-                userAgentPackageName: 'org.safepath.campus',
-              ),
+              if (_mapboxApiKey.isNotEmpty)
+                TileLayer(
+                  urlTemplate:
+                      'https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token={accessToken}',
+                  additionalOptions: {
+                    'accessToken': _mapboxApiKey,
+                    'id': 'mapbox.streets',
+                  },
+                  userAgentPackageName: 'org.safepath.campus',
+                )
+              else
+                TileLayer(
+                  urlTemplate:
+                      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  subdomains: const ['a', 'b', 'c'],
+                  userAgentPackageName: 'org.safepath.campus',
+                ),
               PolylineLayer(polylines: polylines),
               MarkerLayer(markers: markers),
             ],

@@ -34,10 +34,7 @@ class MyHomePage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.person),
             onPressed: () {
-              // TODO: Navigate to My Profile page
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('My Profile (coming soon)')),
-              );
+              Navigator.of(context).pushNamed('/profile');
             },
           ),
           IconButton(
@@ -131,7 +128,8 @@ class MyHomePage extends StatelessWidget {
                           icon: Icons.phone,
                           label: 'Emergency Contacts',
                           onTap: () {
-                            // TODO: navigate to Emergency Contacts
+                            Navigator.of(context)
+                                .pushNamed('/emergency_contacts');
                           },
                         ),
                       ),

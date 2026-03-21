@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "149668090991",
+    "project_id": "heatmap-49b52",
+    "storage_bucket": "heatmap-49b52.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:149668090991:android:5844f066d7a19d5345299a",
+        "android_client_info": {
+          "package_name": "com.example.safepath_campus"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBcCvhICzDqyvREAQglAiT84ts1nSghHYA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,8 +1,12 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:safepath_campus/models/incident.dart';
 
 class IncidentService {
   const IncidentService();
+
+  CollectionReference<Map<String, dynamic>> get _incidentsCollection =>
+      FirebaseFirestore.instance.collection('incidents');
 
   List<Incident> buildMockIncidents({required LatLng around}) {
     final now = DateTime.now();
@@ -57,6 +61,22 @@ class IncidentService {
         verified: true,
       ),
     ];
+  }
+
+  Future<void> saveIncident(Incident incident) async {
+    try {
+      await _incidentsCollection.add({
+        'type': incident.type.name,
+        'severity': incident.severity.name,
+        'lat': incident.location.latitude,
+        'lng': incident.location.longitude,
+        'timestamp': Timestamp.fromDate(incident.timestamp),
+        'description': incident.description,
+        'verified': incident.verified,
+      });
+    } catch (_) {
+      // ignore Firestore write failures for now
+    }
   }
 }
 
