@@ -6,6 +6,7 @@ import 'features/home/splash_screen.dart';
 import 'features/settings/data_sharing_policy_page.dart';
 import 'features/settings/settings_page.dart';
 import 'features/heatmap/campus_map_page.dart';
+import 'features/companion/companion_page.dart';
 import 'theme/theme_provider.dart';
 
 void main() {
@@ -99,6 +100,7 @@ class MyApp extends StatelessWidget {
           darkTheme: darkTheme,
           themeMode: themeProvider.themeMode,
           debugShowCheckedModeBanner: false,
+          // Show branded splash first, then navigate to home.
           home: const SplashScreen(),
           routes: {
             '/home': (context) => const MyHomePage(),
@@ -106,6 +108,7 @@ class MyApp extends StatelessWidget {
             '/settings': (context) => const SettingsPage(),
             '/data_sharing_policy': (context) =>
                 const DataSharingPolicyPage(),
+            '/companion': (context) => const CompanionPage(),
           },
         );
       },
