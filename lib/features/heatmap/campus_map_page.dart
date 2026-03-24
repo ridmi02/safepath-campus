@@ -440,10 +440,9 @@ class _CampusMapPageState extends State<CampusMapPage> {
               _routeDistanceKm = routeDistanceKm;
             });
             if (pts.isNotEmpty) {
-              _mapController.fitBounds(
-                LatLngBounds.fromPoints(pts),
-                options:
-                    const FitBoundsOptions(padding: EdgeInsets.all(40)),
+              _mapController.fitCamera(
+                CameraFit.bounds(
+                    bounds: LatLngBounds.fromPoints(pts), padding: const EdgeInsets.all(40)),
               );
             }
           }
@@ -460,7 +459,7 @@ class _CampusMapPageState extends State<CampusMapPage> {
 
   double _computeRouteDistanceKm(List<LatLng> points) {
     if (points.length < 2) return 0;
-    final distance = Distance();
+    const distance = Distance();
     double totalMeters = 0;
     for (var i = 0; i < points.length - 1; i++) {
       totalMeters += distance(points[i], points[i + 1]);
@@ -687,7 +686,7 @@ class _CampusMapPageState extends State<CampusMapPage> {
           point: _currentLocation!,
           width: 48,
           height: 48,
-          builder: (ctx) => const Icon(
+          child: const Icon(
             Icons.my_location,
             color: Colors.blueAccent,
             size: 32,
@@ -701,7 +700,7 @@ class _CampusMapPageState extends State<CampusMapPage> {
           point: _destination!,
           width: 48,
           height: 48,
-          builder: (ctx) => const Icon(
+          child: const Icon(
             Icons.location_on,
             color: Colors.redAccent,
             size: 40,
@@ -715,7 +714,7 @@ class _CampusMapPageState extends State<CampusMapPage> {
           point: incident.location,
           width: 32,
           height: 32,
-          builder: (ctx) => GestureDetector(
+          child: GestureDetector(
             onTap: () => _showIncidentDetails(incident),
             child: Container(
               decoration: BoxDecoration(
@@ -752,8 +751,8 @@ class _CampusMapPageState extends State<CampusMapPage> {
           FlutterMap(
             mapController: _mapController,
             options: MapOptions(
-              center: _currentLocation ?? LatLng(0, 0),
-              zoom: 15.0,
+              initialCenter: _currentLocation ?? const LatLng(0, 0),
+              initialZoom: 15.0,
               onTap: (tapPos, point) {
                 _setDestination(point);
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -938,7 +937,6 @@ class _CampusMapPageState extends State<CampusMapPage> {
     );
   }
 }
-
 enum _IncidentTimeFilter {
   last24Hours,
   last7Days,
@@ -973,4 +971,3 @@ extension _IncidentTimeFilterX on _IncidentTimeFilter {
     }
   }
 }
-
