@@ -8,13 +8,52 @@ class CompanionPage extends StatefulWidget {
 }
 
 class _CompanionPageState extends State<CompanionPage> {
-  final List<String> _companions = const [
-    'Alex (Peer Escort)',
-    'Jordan (Campus Safety)',
-    'Taylor (Resident Advisor)',
+  final List<_CompanionStudent> _companions = const [
+    _CompanionStudent(
+      name: 'Alex Perera',
+      role: 'Peer Escort',
+      email: 'it22100123@sliit.lk',
+      initials: 'AP',
+      avatarColor: Color(0xFF3A86FF),
+    ),
+    _CompanionStudent(
+      name: 'Jordan Silva',
+      role: 'Campus Safety',
+      email: 'it22100456@sliit.lk',
+      initials: 'JS',
+      avatarColor: Color(0xFF2ECC71),
+    ),
+    _CompanionStudent(
+      name: 'Taylor Fernando',
+      role: 'Resident Advisor',
+      email: 'it22100789@sliit.lk',
+      initials: 'TF',
+      avatarColor: Color(0xFF9B5DE5),
+    ),
+    _CompanionStudent(
+      name: 'Nethmi Jayasuriya',
+      role: 'Senior Student Mentor',
+      email: 'it22100812@sliit.lk',
+      initials: 'NJ',
+      avatarColor: Color(0xFFF4D35E),
+    ),
+    _CompanionStudent(
+      name: 'Kavindu Wickramage',
+      role: 'Peer Escort',
+      email: 'it22100914@sliit.lk',
+      initials: 'KW',
+      avatarColor: Color(0xFFFF6B6B),
+    ),
+    _CompanionStudent(
+      name: 'Senuja Ranasinghe',
+      role: 'Tech Club Volunteer',
+      email: 'it22101031@sliit.lk',
+      initials: 'SR',
+      avatarColor: Color(0xFF4CC9F0),
+    ),
   ];
 
-  String? _selectedCompanion;
+  _CompanionStudent? _selectedCompanion;
   bool _requestInProgress = false;
   bool _isOnCall = false;
 
@@ -127,17 +166,40 @@ class _CompanionPageState extends State<CompanionPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  DropdownButtonFormField<String>(
+                  DropdownButtonFormField<_CompanionStudent>(
                     initialValue: _selectedCompanion,
+                    isExpanded: true,
                     decoration: const InputDecoration(
                       labelText: 'Choose a Companion',
                       border: OutlineInputBorder(),
                     ),
                     items: _companions
                         .map(
-                          (c) => DropdownMenuItem(
+                          (c) => DropdownMenuItem<_CompanionStudent>(
                             value: c,
-                            child: Text(c),
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 12,
+                                  backgroundColor: c.avatarColor,
+                                  child: Text(
+                                    c.initials,
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Text(
+                                    '${c.name} (${c.role})',
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         )
                         .toList(),
@@ -150,50 +212,52 @@ class _CompanionPageState extends State<CompanionPage> {
                           },
                   ),
                   const SizedBox(height: 16),
-                  if (_isOnCall)
+                  if (_selectedCompanion != null)
                     Container(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: Colors.green.withValues(alpha: 0.08),
+                        color: colorScheme.primaryContainer.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: Colors.green.withValues(alpha: 0.6),
+                          color: colorScheme.primary.withValues(alpha: 0.35),
                         ),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Row(
                         children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.shield_moon,
-                                  color: Colors.green),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Walk in progress',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
+                          CircleAvatar(
+                            radius: 24,
+                            backgroundColor: _selectedCompanion!.avatarColor,
+                            child: Text(
+                              _selectedCompanion!.initials,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
                               ),
-                            ],
+                            ),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'You are on a call with '
-                            '${_selectedCompanion ?? 'your Companion'} '
-                            'until you safely reach your door.',
-                            style: theme.textTheme.bodyMedium,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _selectedCompanion!.name,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Text(_selectedCompanion!.role),
+                                Text(
+                                  _selectedCompanion!.email,
+                                  style: theme.textTheme.bodySmall,
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
-                    )
-                  else
-                    Text(
-                      'Your Companion will stay on the line, watch for '
-                      'anything unusual, and can escalate to campus safety '
-                      'if needed.',
-                      style: theme.textTheme.bodyMedium,
                     ),
-                  const Spacer(),
+                  if (_selectedCompanion != null) const SizedBox(height: 12),
                   if (_isOnCall)
                     ElevatedButton.icon(
                       onPressed: _endWalk,
@@ -225,6 +289,50 @@ class _CompanionPageState extends State<CompanionPage> {
                             : 'Request Virtual Walk-Home',
                       ),
                     ),
+                  const SizedBox(height: 14),
+                  if (_isOnCall)
+                    Container(
+                      padding: const EdgeInsets.all(16.0),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.green.withValues(alpha: 0.6),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.shield_moon,
+                                  color: Colors.green),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Walk in progress',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'You are on a call with '
+                            '${_selectedCompanion?.name ?? 'your Companion'} '
+                            'until you safely reach your door.',
+                            style: theme.textTheme.bodyMedium,
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    Text(
+                      'Your Companion will stay on the line, watch for '
+                      'anything unusual, and can escalate to campus safety '
+                      'if needed.',
+                      style: theme.textTheme.bodyMedium,
+                    ),
                 ],
               ),
             ),
@@ -233,5 +341,21 @@ class _CompanionPageState extends State<CompanionPage> {
       ),
     );
   }
+}
+
+class _CompanionStudent {
+  const _CompanionStudent({
+    required this.name,
+    required this.role,
+    required this.email,
+    required this.initials,
+    required this.avatarColor,
+  });
+
+  final String name;
+  final String role;
+  final String email;
+  final String initials;
+  final Color avatarColor;
 }
 
