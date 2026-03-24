@@ -147,6 +147,8 @@ class MyHomePage extends StatelessWidget {
                           },
                         ),
                       ),
+                      const SizedBox(width: 12),
+                      const Expanded(child: SizedBox()),
                     ],
                   ),
                 ],
