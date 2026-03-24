@@ -3,6 +3,7 @@ import 'package:safepath_campus/services/firebase_service.dart';
 
 class MyHomePage extends StatelessWidget {
   const MyHomePage({super.key});
+  static const double _featureTileHeight = 132;
 
   void _triggerSOS(BuildContext context) {
     const FirebaseService().logSosActivated();
@@ -114,23 +115,29 @@ class MyHomePage extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: _FeatureCard(
-                          icon: Icons.map,
-                          label: 'Campus Map',
-                          onTap: () {
-                            Navigator.of(context).pushNamed('/campus_map');
-                          },
+                        child: SizedBox(
+                          height: _featureTileHeight,
+                          child: _FeatureCard(
+                            icon: Icons.map,
+                            label: 'Campus Map',
+                            onTap: () {
+                              Navigator.of(context).pushNamed('/campus_map');
+                            },
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: _FeatureCard(
-                          icon: Icons.phone,
-                          label: 'Emergency Contacts',
-                          onTap: () {
-                            Navigator.of(context)
-                                .pushNamed('/emergency_contacts');
-                          },
+                        child: SizedBox(
+                          height: _featureTileHeight,
+                          child: _FeatureCard(
+                            icon: Icons.phone,
+                            label: 'Emergency Contacts',
+                            onTap: () {
+                              Navigator.of(context)
+                                  .pushNamed('/emergency_contacts');
+                            },
+                          ),
                         ),
                       ),
                     ],
@@ -139,12 +146,15 @@ class MyHomePage extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: _FeatureCard(
-                          icon: Icons.groups_2,
-                          label: 'Companion',
-                          onTap: () {
-                            Navigator.of(context).pushNamed('/companion');
-                          },
+                        child: SizedBox(
+                          height: _featureTileHeight,
+                          child: _FeatureCard(
+                            icon: Icons.groups_2,
+                            label: 'Companion',
+                            onTap: () {
+                              Navigator.of(context).pushNamed('/companion');
+                            },
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
