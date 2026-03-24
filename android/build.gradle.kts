@@ -1,13 +1,3 @@
-buildscript {
-    repositories {
-        google()
-        mavenCentral()
-    }
-    dependencies {
-        classpath("com.google.gms:google-services:4.4.1")
-    }
-}
-
 allprojects {
     repositories {
         google()
@@ -15,16 +5,13 @@ allprojects {
     }
 }
 
-val newBuildDir: Directory =
-    rootProject.layout.buildDirectory
-        .dir("../../build")
-        .get()
-rootProject.layout.buildDirectory.value(newBuildDir)
+// Flutter tooling expects Android build outputs under ../build (at the repo root).
+// Without this, Gradle defaults to android/**/build, and `flutter run` may fail to
+// locate the generated APK even though the build succeeded.
+rootProject.buildDir = file("../build")
 
 subprojects {
-    val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
-    project.layout.buildDirectory.value(newSubprojectBuildDir)
-
+    buildDir = File(rootProject.buildDir, name)
     if (project.name == "telephony") {
         project.afterEvaluate {
             val android = project.extensions.findByName("android")
@@ -39,10 +26,6 @@ subprojects {
     }
 }
 
-subprojects {
-    project.evaluationDependsOn(":app")
-}
-
 tasks.register<Delete>("clean") {
-    delete(rootProject.layout.buildDirectory)
+    delete(rootProject.buildDir)
 }
