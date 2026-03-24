@@ -14,6 +14,8 @@ import 'features/heatmap/campus_map_page.dart';
 import 'package:safepath_campus/voice_activation_page.dart';
 import 'features/profile/profile_page.dart';
 import 'features/emergency_contacts/emergency_contacts_page.dart';
+import 'features/fake_call/fake_call_page.dart';
+import 'screens/emergency_active_page.dart';
 import 'theme/theme_provider.dart';
 
 Future<void> main() async {
@@ -65,6 +67,12 @@ class MyApp extends StatelessWidget {
             '/profile': (context) => const ProfilePage(),
             '/emergency_contacts': (context) => const EmergencyContactsPage(),
             '/companion': (context) => const CompanionPage(),
+            '/fake_call': (context) => const FakeCallPage(),
+            '/emergency_active': (context) {
+              final args = ModalRoute.of(context)!.settings.arguments
+                  as EmergencyActiveArgs;
+              return EmergencyActivePage(args: args);
+            },
           },
         );
       },
