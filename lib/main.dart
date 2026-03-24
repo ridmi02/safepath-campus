@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
-import 'screens/home_screen.dart';
 import 'services/app_theme.dart';
 import 'services/notification_service.dart';
+import 'features/home/splash_screen.dart';
+import 'features/home/home_page.dart';
 import 'features/settings/data_sharing_policy_page.dart';
 import 'features/settings/settings_page.dart';
 import 'features/heatmap/campus_map_page.dart';
+import 'package:safepath_campus/voice_activation_page.dart';
 import 'theme/theme_provider.dart';
 
 void main() async {
@@ -19,7 +21,11 @@ void main() async {
     );
     
     // Initialize notification service
-    await NotificationService.initialize();
+    try {
+      await NotificationService.initialize();
+    } catch (e) {
+      debugPrint('Notification service initialization failed: $e');
+    }
   } catch (e) {
     debugPrint('Firebase initialization failed: $e');
   }
@@ -45,12 +51,14 @@ class MyApp extends StatelessWidget {
           darkTheme: AppTheme.darkTheme,
           themeMode: themeProvider.themeMode,
           debugShowCheckedModeBanner: false,
-          home: const HomeScreen(),
+          home: const SplashScreen(),
           routes: {
+            '/home': (context) => const MyHomePage(),
             '/campus_map': (context) => const CampusMapPage(),
             '/settings': (context) => const SettingsPage(),
             '/data_sharing_policy': (context) =>
                 const DataSharingPolicyPage(),
+            '/voice_activation': (context) => const VoiceActivationPage(),
           },
         );
       },

@@ -105,10 +105,9 @@ class _CampusMapPageState extends State<CampusMapPage> {
               _routePoints = pts;
             });
             if (pts.isNotEmpty) {
-              _mapController.fitBounds(
-                LatLngBounds.fromPoints(pts),
-                options:
-                    const FitBoundsOptions(padding: EdgeInsets.all(40)),
+              _mapController.fitCamera(
+                CameraFit.bounds(
+                    bounds: LatLngBounds.fromPoints(pts), padding: const EdgeInsets.all(40)),
               );
             }
           }
@@ -229,7 +228,7 @@ class _CampusMapPageState extends State<CampusMapPage> {
           point: _currentLocation!,
           width: 48,
           height: 48,
-          builder: (ctx) => const Icon(
+          child: const Icon(
             Icons.my_location,
             color: Colors.blueAccent,
             size: 32,
@@ -243,7 +242,7 @@ class _CampusMapPageState extends State<CampusMapPage> {
           point: _destination!,
           width: 48,
           height: 48,
-          builder: (ctx) => const Icon(
+          child: const Icon(
             Icons.location_on,
             color: Colors.redAccent,
             size: 40,
@@ -270,8 +269,8 @@ class _CampusMapPageState extends State<CampusMapPage> {
           FlutterMap(
             mapController: _mapController,
             options: MapOptions(
-              center: _currentLocation ?? LatLng(0, 0),
-              zoom: 15.0,
+              initialCenter: _currentLocation ?? const LatLng(0, 0),
+              initialZoom: 15.0,
               onTap: (tapPos, point) {
                 _setDestination(point);
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -433,4 +432,3 @@ class _CampusMapPageState extends State<CampusMapPage> {
     );
   }
 }
-

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:safepath_campus/services/firebase_service.dart';
+import 'package:safepath_campus/screens/emergency_screen.dart';
+import 'package:safepath_campus/voice_activation_page.dart';
 
 class MyHomePage extends StatelessWidget {
   const MyHomePage({super.key});
@@ -109,10 +111,13 @@ class MyHomePage extends StatelessWidget {
                     children: [
                       Expanded(
                         child: _FeatureCard(
-                          icon: Icons.warning,
-                          label: 'Report Incident',
+                          icon: Icons.emergency_share,
+                          label: 'Emergency Alert System',
                           onTap: () {
-                            // TODO: navigate to Report Incident
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                  builder: (context) => const EmergencyScreen()),
+                            );
                           },
                         ),
                       ),
@@ -133,10 +138,13 @@ class MyHomePage extends StatelessWidget {
                     children: [
                       Expanded(
                         child: _FeatureCard(
-                          icon: Icons.phone,
-                          label: 'Emergency Contacts',
+                          icon: Icons.record_voice_over,
+                          label: 'Voice Activation',
                           onTap: () {
-                            // TODO: navigate to Emergency Contacts
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                  builder: (context) => const VoiceActivationPage()),
+                            );
                           },
                         ),
                       ),
@@ -146,7 +154,10 @@ class MyHomePage extends StatelessWidget {
                           icon: Icons.person,
                           label: 'My Profile',
                           onTap: () {
-                            // TODO: navigate to My Profile
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('My Profile feature coming soon')),
+                            );
                           },
                         ),
                       ),
@@ -208,4 +219,3 @@ class _FeatureCard extends StatelessWidget {
     );
   }
 }
-

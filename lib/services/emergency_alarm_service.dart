@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
@@ -6,7 +7,10 @@ import 'package:volume_controller/volume_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:telephony/telephony.dart';
 import 'notification_service.dart';
+import '../firebase_options.dart';
 
 class EmergencyAlertService {
   static bool _isAlertActive = false;
@@ -16,22 +20,47 @@ class EmergencyAlertService {
   bool get isAlertActive => _isAlertActive;
 
   /// Get list of emergency contacts
-  Future<List<String>> getEmergencyContacts() async {
+  Future<List<Map<String, dynamic>>> getEmergencyContacts() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_contactsKey) ?? [];
+    final List<String> rawList = prefs.getStringList(_contactsKey) ?? [];
+    
+    return rawList.map((item) {
+      try {
+        return jsonDecode(item) as Map<String, dynamic>;
+      } catch (e) {
+        // Handle legacy simple phone number strings
+        return {'phone': item, 'name': 'Unknown', 'relation': 'Emergency Contact'};
+      }
+    }).toList();
   }
 
   /// Add emergency contact phone number
-  Future<void> addEmergencyContact(String phoneNumber) async {
+  Future<void> addEmergencyContact(String name, String phone, String relation) async {
     final prefs = await SharedPreferences.getInstance();
     final contacts = prefs.getStringList(_contactsKey) ?? [];
     
-    if (!contacts.contains(phoneNumber)) {
-      contacts.add(phoneNumber);
+    // Check for duplicates based on phone
+    bool exists = contacts.any((item) {
+      try {
+        final map = jsonDecode(item);
+        return map['phone'] == phone;
+      } catch (e) {
+        return item == phone;
+      }
+    });
+
+    if (!exists) {
+      final newContact = {
+        'name': name,
+        'phone': phone,
+        'relation': relation,
+        'addedAt': DateTime.now().toIso8601String(),
+      };
+      contacts.add(jsonEncode(newContact));
       await prefs.setStringList(_contactsKey, contacts);
       
       // Subscribe to notifications for this contact
-      await NotificationService.subscribeToEmergencyUpdates(phoneNumber);
+      await NotificationService.subscribeToEmergencyUpdates(phone);
     }
   }
 
@@ -39,7 +68,16 @@ class EmergencyAlertService {
   Future<void> removeEmergencyContact(String phoneNumber) async {
     final prefs = await SharedPreferences.getInstance();
     final contacts = prefs.getStringList(_contactsKey) ?? [];
-    contacts.remove(phoneNumber);
+    
+    contacts.removeWhere((item) {
+      try {
+        final map = jsonDecode(item);
+        return map['phone'] == phoneNumber;
+      } catch (e) {
+        return item == phoneNumber;
+      }
+    });
+    
     await prefs.setStringList(_contactsKey, contacts);
     
     // Unsubscribe from notifications for this contact
@@ -88,10 +126,10 @@ class EmergencyAlertService {
 
     try {
       final contacts = await getEmergencyContacts();
+      final phoneNumbers = contacts.map((c) => c['phone'] as String).toList();
       
-      // Send notification to each emergency contact
-      for (final phoneNumber in contacts) {
-        await _sendEmergencyNotification(phoneNumber);
+      if (phoneNumbers.isNotEmpty) {
+        await _sendEmergencyNotification(phoneNumbers);
       }
     } catch (e) {
       debugPrint('Error activating emergency alert: $e');
@@ -100,19 +138,45 @@ class EmergencyAlertService {
 
   /// Send emergency notification to a phone number
   /// This integrates with Firebase Cloud Functions for SMS delivery
-  Future<void> _sendEmergencyNotification(String phoneNumber) async {
+  Future<void> _sendEmergencyNotification(List<String> phoneNumbers) async {
     try {
-      // Use NotificationService to send emergency alert
-      // The Cloud Function will handle SMS delivery via Twilio/AWS SNS
+      // Get current location
+      String locationString = 'Unknown Location';
+      try {
+        Position position = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(accuracy: LocationAccuracy.high)
+        );
+        locationString = 'https://www.google.com/maps/search/?api=1&query=${position.latitude},${position.longitude}';
+      } catch (e) {
+        debugPrint('Error getting location for alert: $e');
+      }
+
+      // Send Direct SMS to each contact
+      String messageBody = "SOS! I need help. My location: $locationString";
+      
+      for (String phone in phoneNumbers) {
+        final Telephony telephony = Telephony.instance;
+        try {
+          await telephony.sendSms(
+            to: phone,
+            message: messageBody,
+            statusListener: (SendStatus status) => debugPrint("SMS status for $phone: $status"),
+          );
+        } catch (e) {
+          debugPrint("Error sending SMS to $phone: $e");
+        }
+      }
+
+      // Also log to Firebase (optional backup)
       await NotificationService.sendEmergencyNotification(
-        phoneNumbers: [phoneNumber],
+        phoneNumbers: phoneNumbers,
         userName: 'SafePath User',
-        userLocation: 'Campus Location', // Could be enhanced with actual location from geolocator
+        userLocation: locationString,
       );
       
-      debugPrint('Emergency alert initiated for: $phoneNumber');
+      debugPrint('Emergency alert initiated for: $phoneNumbers at $locationString');
     } catch (e) {
-      debugPrint('Error sending notification to $phoneNumber: $e');
+      debugPrint('Error sending notification: $e');
     }
   }
 
@@ -136,7 +200,9 @@ void onStart(ServiceInstance service) async {
 
   // Initialize Firebase for the background isolate
   try {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
   } catch (e) {
     debugPrint('Firebase init error in background: $e');
   }
