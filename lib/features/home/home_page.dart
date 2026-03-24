@@ -135,6 +135,20 @@ class MyHomePage extends StatelessWidget {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _FeatureCard(
+                          icon: Icons.groups_2,
+                          label: 'Companion',
+                          onTap: () {
+                            Navigator.of(context).pushNamed('/companion');
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),

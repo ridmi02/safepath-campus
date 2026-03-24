@@ -1,3 +1,4 @@
+import 'package:safepath_campus/features/companion/companion_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
@@ -116,6 +117,7 @@ class MyApp extends StatelessWidget {
                 const DataSharingPolicyPage(),
             '/profile': (context) => const ProfilePage(),
             '/emergency_contacts': (context) => const EmergencyContactsPage(),
+            '/companion': (context) => const CompanionPage(),
           },
         );
       },
