@@ -1,5 +1,7 @@
+import 'package:safepath_campus/features/companion/companion_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'services/app_theme.dart';
@@ -10,17 +12,16 @@ import 'features/settings/data_sharing_policy_page.dart';
 import 'features/settings/settings_page.dart';
 import 'features/heatmap/campus_map_page.dart';
 import 'package:safepath_campus/voice_activation_page.dart';
+import 'features/profile/profile_page.dart';
+import 'features/emergency_contacts/emergency_contacts_page.dart';
 import 'theme/theme_provider.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    
-    // Initialize notification service
     try {
       await NotificationService.initialize();
     } catch (e) {
@@ -29,6 +30,7 @@ void main() async {
   } catch (e) {
     debugPrint('Firebase initialization failed: $e');
   }
+  await dotenv.load(fileName: ".env");
 
   runApp(
     ChangeNotifierProvider(
@@ -51,6 +53,7 @@ class MyApp extends StatelessWidget {
           darkTheme: AppTheme.darkTheme,
           themeMode: themeProvider.themeMode,
           debugShowCheckedModeBanner: false,
+          // Show branded splash first, then navigate to home.
           home: const SplashScreen(),
           routes: {
             '/home': (context) => const MyHomePage(),
@@ -59,6 +62,9 @@ class MyApp extends StatelessWidget {
             '/data_sharing_policy': (context) =>
                 const DataSharingPolicyPage(),
             '/voice_activation': (context) => const VoiceActivationPage(),
+            '/profile': (context) => const ProfilePage(),
+            '/emergency_contacts': (context) => const EmergencyContactsPage(),
+            '/companion': (context) => const CompanionPage(),
           },
         );
       },

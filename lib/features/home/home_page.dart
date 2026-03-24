@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:safepath_campus/services/firebase_service.dart';
 import 'package:safepath_campus/screens/emergency_screen.dart';
+import 'package:safepath_campus/services/firebase_service.dart';
 import 'package:safepath_campus/voice_activation_page.dart';
 
 class MyHomePage extends StatelessWidget {
   const MyHomePage({super.key});
+  static const double _featureTileHeight = 132;
 
   void _triggerSOS(BuildContext context) {
     const FirebaseService().logSosActivated();
@@ -33,6 +34,12 @@ class MyHomePage extends StatelessWidget {
         title: const Text('SafePath Campus'),
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: () {
+              Navigator.of(context).pushNamed('/profile');
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
@@ -110,25 +117,33 @@ class MyHomePage extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: _FeatureCard(
-                          icon: Icons.emergency_share,
-                          label: 'Emergency Alert System',
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                  builder: (context) => const EmergencyScreen()),
-                            );
-                          },
+                        child: SizedBox(
+                          height: _featureTileHeight,
+                          child: _FeatureCard(
+                            icon: Icons.emergency_share,
+                            label: 'Emergency Alert System',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const EmergencyScreen(),
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: _FeatureCard(
-                          icon: Icons.map,
-                          label: 'Campus Map',
-                          onTap: () {
-                            Navigator.of(context).pushNamed('/campus_map');
-                          },
+                        child: SizedBox(
+                          height: _featureTileHeight,
+                          child: _FeatureCard(
+                            icon: Icons.phone,
+                            label: 'Emergency Contacts',
+                            onTap: () {
+                              Navigator.of(context)
+                                  .pushNamed('/emergency_contacts');
+                            },
+                          ),
                         ),
                       ),
                     ],
@@ -137,28 +152,33 @@ class MyHomePage extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: _FeatureCard(
-                          icon: Icons.record_voice_over,
-                          label: 'Voice Activation',
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                  builder: (context) => const VoiceActivationPage()),
-                            );
-                          },
+                        child: SizedBox(
+                          height: _featureTileHeight,
+                          child: _FeatureCard(
+                            icon: Icons.groups_2,
+                            label: 'Companion',
+                            onTap: () {
+                              Navigator.of(context).pushNamed('/companion');
+                            },
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: _FeatureCard(
-                          icon: Icons.person,
-                          label: 'My Profile',
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('My Profile feature coming soon')),
-                            );
-                          },
+                        child: SizedBox(
+                          height: _featureTileHeight,
+                          child: _FeatureCard(
+                            icon: Icons.record_voice_over,
+                            label: 'Voice Activation',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const VoiceActivationPage(),
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ),
                     ],
@@ -197,19 +217,23 @@ class _FeatureCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(12.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 48, color: cardText),
-              const SizedBox(height: 12),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: cardText,
+              Icon(icon, size: 42, color: cardText),
+              const SizedBox(height: 8),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: cardText,
+                  ),
                 ),
               ),
             ],
