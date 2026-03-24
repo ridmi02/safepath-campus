@@ -1,15 +1,26 @@
 import 'dart:developer' as developer;
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 /// Central place to add Firebase-related interactions for the app.
-/// Currently a lightweight stub so the UI can depend on it without
-/// requiring Firebase to be wired up yet.
 class FirebaseService {
   const FirebaseService();
 
+  CollectionReference<Map<String, dynamic>> get _sosCollection =>
+      FirebaseFirestore.instance.collection('sos_logs');
+
   Future<void> logSosActivated() async {
-    // In a future iteration this can send an event to Firebase Analytics
-    // or write to Firestore / Realtime Database.
-    developer.log('SOS activated', name: 'FirebaseService');
+    try {
+      await _sosCollection.add({
+        'activatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e, st) {
+      developer.log(
+        'Failed to log SOS: $e',
+        name: 'FirebaseService',
+        stackTrace: st,
+      );
+    }
   }
 }
 

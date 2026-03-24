@@ -128,7 +128,7 @@ class _CompanionPageState extends State<CompanionPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   DropdownButtonFormField<String>(
-                    value: _selectedCompanion,
+                    initialValue: _selectedCompanion,
                     decoration: const InputDecoration(
                       labelText: 'Choose a Companion',
                       border: OutlineInputBorder(),
@@ -154,10 +154,10 @@ class _CompanionPageState extends State<CompanionPage> {
                     Container(
                       padding: const EdgeInsets.all(16.0),
                       decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.08),
+                        color: Colors.green.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: Colors.green.withOpacity(0.6),
+                          color: Colors.green.withValues(alpha: 0.6),
                         ),
                       ),
                       child: Column(

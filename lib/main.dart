@@ -1,15 +1,23 @@
+import 'package:safepath_campus/features/companion/companion_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import 'features/home/home_page.dart';
 import 'features/home/splash_screen.dart';
 import 'features/settings/data_sharing_policy_page.dart';
 import 'features/settings/settings_page.dart';
 import 'features/heatmap/campus_map_page.dart';
-import 'features/companion/companion_page.dart';
+import 'features/profile/profile_page.dart';
+import 'features/emergency_contacts/emergency_contacts_page.dart';
 import 'theme/theme_provider.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  await dotenv.load(fileName: ".env");
+
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeProvider(),
@@ -108,6 +116,8 @@ class MyApp extends StatelessWidget {
             '/settings': (context) => const SettingsPage(),
             '/data_sharing_policy': (context) =>
                 const DataSharingPolicyPage(),
+            '/profile': (context) => const ProfilePage(),
+            '/emergency_contacts': (context) => const EmergencyContactsPage(),
             '/companion': (context) => const CompanionPage(),
           },
         );

@@ -32,6 +32,12 @@ class MyHomePage extends StatelessWidget {
         centerTitle: true,
         actions: [
           IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: () {
+              Navigator.of(context).pushNamed('/profile');
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
               Navigator.of(context).pushNamed('/settings');
@@ -109,20 +115,21 @@ class MyHomePage extends StatelessWidget {
                     children: [
                       Expanded(
                         child: _FeatureCard(
-                          icon: Icons.warning,
-                          label: 'Report Incident',
+                          icon: Icons.map,
+                          label: 'Campus Map',
                           onTap: () {
-                            // TODO: navigate to Report Incident
+                            Navigator.of(context).pushNamed('/campus_map');
                           },
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: _FeatureCard(
-                          icon: Icons.map,
-                          label: 'Campus Map',
+                          icon: Icons.phone,
+                          label: 'Emergency Contacts',
                           onTap: () {
-                            Navigator.of(context).pushNamed('/campus_map');
+                            Navigator.of(context)
+                                .pushNamed('/emergency_contacts');
                           },
                         ),
                       ),
@@ -133,18 +140,8 @@ class MyHomePage extends StatelessWidget {
                     children: [
                       Expanded(
                         child: _FeatureCard(
-                          icon: Icons.phone,
-                          label: 'Emergency Contacts',
-                          onTap: () {
-                            // TODO: navigate to Emergency Contacts
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _FeatureCard(
-                          icon: Icons.directions_walk,
-                          label: 'The Companion',
+                          icon: Icons.groups_2,
+                          label: 'Companion',
                           onTap: () {
                             Navigator.of(context).pushNamed('/companion');
                           },

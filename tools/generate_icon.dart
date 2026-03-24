@@ -17,8 +17,8 @@ void main() async {
   final file = File('assets/icon/icon.png');
   await file.writeAsBytes(iconData);
   
-  print('Icon generated successfully: ${file.path}');
-  print('Run "dart run flutter_launcher_icons" to generate platform icons');
+  stdout.writeln('Icon generated successfully: ${file.path}');
+  stdout.writeln('Run "dart run flutter_launcher_icons" to generate platform icons');
 }
 
 List<int> createSimpleIconPNG() {
