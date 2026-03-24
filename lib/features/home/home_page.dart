@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:safepath_campus/screens/emergency_screen.dart';
 import 'package:safepath_campus/services/firebase_service.dart';
+import 'package:safepath_campus/voice_activation_page.dart';
 
 class MyHomePage extends StatelessWidget {
   const MyHomePage({super.key});
@@ -118,10 +120,14 @@ class MyHomePage extends StatelessWidget {
                         child: SizedBox(
                           height: _featureTileHeight,
                           child: _FeatureCard(
-                            icon: Icons.map,
-                            label: 'Campus Map',
+                            icon: Icons.emergency_share,
+                            label: 'Emergency Alert System',
                             onTap: () {
-                              Navigator.of(context).pushNamed('/campus_map');
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const EmergencyScreen(),
+                                ),
+                              );
                             },
                           ),
                         ),
@@ -131,11 +137,10 @@ class MyHomePage extends StatelessWidget {
                         child: SizedBox(
                           height: _featureTileHeight,
                           child: _FeatureCard(
-                            icon: Icons.phone,
-                            label: 'Emergency Contacts',
+                            icon: Icons.map,
+                            label: 'Campus Map',
                             onTap: () {
-                              Navigator.of(context)
-                                  .pushNamed('/emergency_contacts');
+                              Navigator.of(context).pushNamed('/campus_map');
                             },
                           ),
                         ),
@@ -158,7 +163,23 @@ class MyHomePage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const Expanded(child: SizedBox()),
+                      Expanded(
+                        child: SizedBox(
+                          height: _featureTileHeight,
+                          child: _FeatureCard(
+                            icon: Icons.record_voice_over,
+                            label: 'Voice Activation',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const VoiceActivationPage(),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -221,4 +242,3 @@ class _FeatureCard extends StatelessWidget {
     );
   }
 }
-
