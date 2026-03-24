@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
@@ -18,13 +17,14 @@ class CampusMapPage extends StatefulWidget {
 }
 
 class _CampusMapPageState extends State<CampusMapPage> {
-  final String _openCageApiKey = dotenv.env['OPENCAGE_API_KEY'] ?? '';
-  final String _mapboxApiKey = dotenv.env['MAPBOX_API_KEY'] ?? '';
+  static const String _nominatimHost = 'nominatim.openstreetmap.org';
+  static const String _slViewbox = '79.521,9.836,81.879,5.918';
   final MapController _mapController = MapController();
   final TextEditingController _searchController = TextEditingController();
   bool _searching = false;
   List<Map<String, dynamic>> _suggestions = [];
   Timer? _debounceTimer;
+  Timer? _mapThemeTimer;
 
   final IncidentService _incidentService = const IncidentService();
   List<Incident> _allIncidents = [];
@@ -40,11 +40,31 @@ class _CampusMapPageState extends State<CampusMapPage> {
   List<LatLng> _routePoints = [];
   bool _loadingRoute = false;
   double? _routeDistanceKm;
+  bool _useNightTiles = false;
 
   @override
   void initState() {
     super.initState();
+    _initMapThemeCycle();
     _initLocation();
+  }
+
+  void _initMapThemeCycle() {
+    _useNightTiles = _isNightNow();
+    _mapThemeTimer = Timer.periodic(const Duration(minutes: 5), (_) {
+      if (!mounted) return;
+      final nightNow = _isNightNow();
+      if (nightNow != _useNightTiles) {
+        setState(() {
+          _useNightTiles = nightNow;
+        });
+      }
+    });
+  }
+
+  bool _isNightNow() {
+    final hour = DateTime.now().hour;
+    return hour >= 18 || hour < 6;
   }
 
   Future<void> _initLocation() async {
@@ -385,6 +405,7 @@ class _CampusMapPageState extends State<CampusMapPage> {
   void dispose() {
     _locationSubscription?.cancel();
     _debounceTimer?.cancel();
+    _mapThemeTimer?.cancel();
     _searchController.dispose();
     _locationService.dispose();
     super.dispose();
@@ -487,15 +508,17 @@ class _CampusMapPageState extends State<CampusMapPage> {
     final walkingMinutes = (distance / walkingSpeedKmh) * 60.0;
     final cyclingMinutes = (distance / cyclingSpeedKmh) * 60.0;
     final drivingMinutes = (distance / drivingSpeedKmh) * 60.0;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Align(
       alignment: Alignment.bottomCenter,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 140),
         child: Material(
-          elevation: 4,
+          elevation: 5,
           borderRadius: BorderRadius.circular(12),
-          color: Colors.white.withAlpha((0.9 * 255).round()),
+          color: colorScheme.surface.withValues(alpha: 0.96),
           child: Padding(
             padding: const EdgeInsets.all(12.0),
             child: Column(
@@ -504,8 +527,9 @@ class _CampusMapPageState extends State<CampusMapPage> {
               children: [
                 Text(
                   'Estimated travel time (${distance.toStringAsFixed(1)} km)',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -514,23 +538,53 @@ class _CampusMapPageState extends State<CampusMapPage> {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.directions_walk, size: 20),
+                        Icon(
+                          Icons.directions_walk,
+                          size: 20,
+                          color: colorScheme.primary,
+                        ),
                         const SizedBox(width: 4),
-                        Text(_formatMinutes(walkingMinutes)),
+                        Text(
+                          _formatMinutes(walkingMinutes),
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
                       ],
                     ),
                     Row(
                       children: [
-                        const Icon(Icons.directions_bike, size: 20),
+                        Icon(
+                          Icons.directions_bike,
+                          size: 20,
+                          color: colorScheme.primary,
+                        ),
                         const SizedBox(width: 4),
-                        Text(_formatMinutes(cyclingMinutes)),
+                        Text(
+                          _formatMinutes(cyclingMinutes),
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
                       ],
                     ),
                     Row(
                       children: [
-                        const Icon(Icons.directions_car, size: 20),
+                        Icon(
+                          Icons.directions_car,
+                          size: 20,
+                          color: colorScheme.primary,
+                        ),
                         const SizedBox(width: 4),
-                        Text(_formatMinutes(drivingMinutes)),
+                        Text(
+                          _formatMinutes(drivingMinutes),
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -560,21 +614,27 @@ class _CampusMapPageState extends State<CampusMapPage> {
     _debounceTimer = Timer(const Duration(milliseconds: 500), () async {
       try {
         final uri = Uri.https(
-          'api.opencagedata.com',
-          '/geocode/v1/json',
+          _nominatimHost,
+          '/search',
           {
-            'key': _openCageApiKey,
             'q': query,
+            'format': 'jsonv2',
             'limit': '5',
-            'no_annotations': '1',
+            'countrycodes': 'lk',
+            'addressdetails': '1',
+            'bounded': '1',
+            'viewbox': _slViewbox,
           },
         );
-        final res = await http.get(uri);
+        final res = await http.get(
+          uri,
+          headers: const {
+            'User-Agent': 'SafePathCampus/1.0 (safepath-campus-app)',
+            'Accept-Language': 'en',
+          },
+        );
         if (res.statusCode == 200 && mounted) {
-          final Map<String, dynamic> data =
-              jsonDecode(res.body) as Map<String, dynamic>;
-          final List results =
-              (data['results'] as List? ?? <dynamic>[]);
+          final List results = jsonDecode(res.body) as List<dynamic>;
           setState(() {
             _suggestions = results.cast<Map<String, dynamic>>();
           });
@@ -598,9 +658,8 @@ class _CampusMapPageState extends State<CampusMapPage> {
     // result in the list (similar to Google Maps).
     if (_suggestions.isNotEmpty) {
       final first = _suggestions.first;
-      final geometry = first['geometry'] as Map<String, dynamic>?;
-      final lat = (geometry?['lat'] as num?)?.toDouble();
-      final lon = (geometry?['lng'] as num?)?.toDouble();
+      final lat = double.tryParse(first['lat']?.toString() ?? '');
+      final lon = double.tryParse(first['lon']?.toString() ?? '');
       if (lat != null && lon != null) {
         final dest = LatLng(lat, lon);
         await _setDestination(dest);
@@ -623,27 +682,31 @@ class _CampusMapPageState extends State<CampusMapPage> {
 
     try {
       final uri = Uri.https(
-        'api.opencagedata.com',
-        '/geocode/v1/json',
+        _nominatimHost,
+        '/search',
         {
-          'key': _openCageApiKey,
           'q': query,
+          'format': 'jsonv2',
           'limit': '1',
-          'no_annotations': '1',
+          'countrycodes': 'lk',
+          'addressdetails': '1',
+          'bounded': '1',
+          'viewbox': _slViewbox,
         },
       );
-      final res = await http.get(uri);
+      final res = await http.get(
+        uri,
+        headers: const {
+          'User-Agent': 'SafePathCampus/1.0 (safepath-campus-app)',
+          'Accept-Language': 'en',
+        },
+      );
       if (res.statusCode == 200) {
-        final Map<String, dynamic> data =
-            jsonDecode(res.body) as Map<String, dynamic>;
-        final List results =
-            (data['results'] as List? ?? <dynamic>[]);
+        final List results = jsonDecode(res.body) as List<dynamic>;
         if (results.isNotEmpty) {
           final first = results.first as Map<String, dynamic>;
-          final geometry =
-              first['geometry'] as Map<String, dynamic>?;
-          final lat = (geometry?['lat'] as num?)?.toDouble();
-          final lon = (geometry?['lng'] as num?)?.toDouble();
+          final lat = double.tryParse(first['lat']?.toString() ?? '');
+          final lon = double.tryParse(first['lon']?.toString() ?? '');
           if (lat != null && lon != null) {
             final dest = LatLng(lat, lon);
             _setDestination(dest);
@@ -765,23 +828,18 @@ class _CampusMapPageState extends State<CampusMapPage> {
               },
             ),
             children: [
-              if (_mapboxApiKey.isNotEmpty)
-                TileLayer(
-                  urlTemplate:
-                      'https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token={accessToken}',
-                  additionalOptions: {
-                    'accessToken': _mapboxApiKey,
-                    'id': 'mapbox.streets',
-                  },
-                  userAgentPackageName: 'org.safepath.campus',
-                )
-              else
-                TileLayer(
-                  urlTemplate:
-                      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  subdomains: const ['a', 'b', 'c'],
-                  userAgentPackageName: 'org.safepath.campus',
-                ),
+              TileLayer(
+                // Day: colorful map, Night: dark map.
+                urlTemplate:
+                    _useNightTiles
+                        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                        : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+                subdomains: const ['a', 'b', 'c', 'd'],
+                userAgentPackageName: 'org.safepath.campus',
+                additionalOptions: const {'r': ''},
+                // Keep nearby tiles in memory while panning for smoother UX.
+                keepBuffer: 5,
+              ),
               PolylineLayer(polylines: polylines),
               MarkerLayer(markers: markers),
             ],
@@ -854,13 +912,11 @@ class _CampusMapPageState extends State<CampusMapPage> {
                         itemBuilder: (ctx, idx) {
                           final sugg = _suggestions[idx];
                           final name =
-                              sugg['formatted'] as String? ?? 'Unknown';
-                          final geometry = sugg['geometry']
-                              as Map<String, dynamic>?;
+                              sugg['display_name'] as String? ?? 'Unknown';
                           final lat =
-                              (geometry?['lat'] as num?)?.toDouble();
+                              double.tryParse(sugg['lat']?.toString() ?? '');
                           final lon =
-                              (geometry?['lng'] as num?)?.toDouble();
+                              double.tryParse(sugg['lon']?.toString() ?? '');
                           return ListTile(
                             leading:
                                 const Icon(Icons.location_on, size: 20),
