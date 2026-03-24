@@ -108,6 +108,7 @@ class MyApp extends StatelessWidget {
           darkTheme: darkTheme,
           themeMode: themeProvider.themeMode,
           debugShowCheckedModeBanner: false,
+          // Show branded splash first, then navigate to home.
           home: const SplashScreen(),
           routes: {
             '/home': (context) => const MyHomePage(),
