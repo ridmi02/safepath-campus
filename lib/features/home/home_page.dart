@@ -137,11 +137,10 @@ class MyHomePage extends StatelessWidget {
                         child: SizedBox(
                           height: _featureTileHeight,
                           child: _FeatureCard(
-                            icon: Icons.phone,
-                            label: 'Emergency Contacts',
+                            icon: Icons.map,
+                            label: 'Campus Map',
                             onTap: () {
-                              Navigator.of(context)
-                                  .pushNamed('/emergency_contacts');
+                              Navigator.of(context).pushNamed('/campus_map');
                             },
                           ),
                         ),

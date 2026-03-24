@@ -459,7 +459,7 @@ class _CampusMapPageState extends State<CampusMapPage> {
 
   double _computeRouteDistanceKm(List<LatLng> points) {
     if (points.length < 2) return 0;
-    final distance = Distance();
+    const distance = Distance();
     double totalMeters = 0;
     for (var i = 0; i < points.length - 1; i++) {
       totalMeters += distance(points[i], points[i + 1]);
@@ -714,7 +714,7 @@ class _CampusMapPageState extends State<CampusMapPage> {
           point: incident.location,
           width: 32,
           height: 32,
-          builder: (ctx) => GestureDetector(
+          child: GestureDetector(
             onTap: () => _showIncidentDetails(incident),
             child: Container(
               decoration: BoxDecoration(
