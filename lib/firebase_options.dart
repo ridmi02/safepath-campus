@@ -41,48 +41,49 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCpaImNzHTCFfSIEG1XnSTarkem6L_fxEs',
-    appId: '1:110145560500:web:d2b255f8c6ab59264e5ce1',
-    messagingSenderId: '110145560500',
-    projectId: 'safepath-campus',
-    authDomain: 'safepath-campus.firebaseapp.com',
-    storageBucket: 'safepath-campus.firebasestorage.app',
-    measurementId: 'G-YHZT5P5ZZQ',
+    apiKey: 'AIzaSyB9GoQrYPFdHLAHwYkeDn6Qn5VVFpCr_QA',
+    appId: '1:685856606892:web:b94f3c15f2a9a3f8a06d09',
+    messagingSenderId: '685856606892',
+    projectId: 'safepathcampus',
+    authDomain: 'safepathcampus.firebaseapp.com',
+    storageBucket: 'safepathcampus.firebasestorage.app',
+    measurementId: 'G-S6NBF3WGB3',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyD-bLpha6Ikt8irjdaQ_UDvXLWCdhh3VaQ',
-    appId: '1:110145560500:android:7f44b29e2eceeb184e5ce1',
-    messagingSenderId: '110145560500',
-    projectId: 'safepath-campus',
-    storageBucket: 'safepath-campus.firebasestorage.app',
+    apiKey: 'AIzaSyC4n4ypb3r_sxVTftjJG7j-O_YP3RbgwXk',
+    appId: '1:685856606892:android:bb1dbd2c492563a2a06d09',
+    messagingSenderId: '685856606892',
+    projectId: 'safepathcampus',
+    storageBucket: 'safepathcampus.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBOog3L-BWhRHzdJ4sJJT7CJX3Llk2mjhk',
-    appId: '1:110145560500:ios:c75132250e2b8c034e5ce1',
-    messagingSenderId: '110145560500',
-    projectId: 'safepath-campus',
-    storageBucket: 'safepath-campus.firebasestorage.app',
+    apiKey: 'AIzaSyAnHyheglNgFj7itR0N6Iy7WMAt3eE4dDU',
+    appId: '1:685856606892:ios:d5460b73d4a3ecd4a06d09',
+    messagingSenderId: '685856606892',
+    projectId: 'safepathcampus',
+    storageBucket: 'safepathcampus.firebasestorage.app',
     iosBundleId: 'com.example.safepathCampus',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyBOog3L-BWhRHzdJ4sJJT7CJX3Llk2mjhk',
-    appId: '1:110145560500:ios:c75132250e2b8c034e5ce1',
-    messagingSenderId: '110145560500',
-    projectId: 'safepath-campus',
-    storageBucket: 'safepath-campus.firebasestorage.app',
+    apiKey: 'AIzaSyAnHyheglNgFj7itR0N6Iy7WMAt3eE4dDU',
+    appId: '1:685856606892:ios:d5460b73d4a3ecd4a06d09',
+    messagingSenderId: '685856606892',
+    projectId: 'safepathcampus',
+    storageBucket: 'safepathcampus.firebasestorage.app',
     iosBundleId: 'com.example.safepathCampus',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyCpaImNzHTCFfSIEG1XnSTarkem6L_fxEs',
-    appId: '1:110145560500:web:6f803d73f49b46514e5ce1',
-    messagingSenderId: '110145560500',
-    projectId: 'safepath-campus',
-    authDomain: 'safepath-campus.firebaseapp.com',
-    storageBucket: 'safepath-campus.firebasestorage.app',
-    measurementId: 'G-HD3C78LP5R',
+    apiKey: 'AIzaSyB9GoQrYPFdHLAHwYkeDn6Qn5VVFpCr_QA',
+    appId: '1:685856606892:web:3436809fd5afde38a06d09',
+    messagingSenderId: '685856606892',
+    projectId: 'safepathcampus',
+    authDomain: 'safepathcampus.firebaseapp.com',
+    storageBucket: 'safepathcampus.firebasestorage.app',
+    measurementId: 'G-5YKNNTED8B',
   );
+
 }

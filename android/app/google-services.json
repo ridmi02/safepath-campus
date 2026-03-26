@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "110145560500",
-    "project_id": "safepath-campus",
-    "storage_bucket": "safepath-campus.firebasestorage.app"
+    "project_number": "685856606892",
+    "project_id": "safepathcampus",
+    "storage_bucket": "safepathcampus.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:110145560500:android:7f44b29e2eceeb184e5ce1",
+        "mobilesdk_app_id": "1:685856606892:android:bb1dbd2c492563a2a06d09",
         "android_client_info": {
           "package_name": "com.example.safepath_campus"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyD-bLpha6Ikt8irjdaQ_UDvXLWCdhh3VaQ"
+          "current_key": "AIzaSyC4n4ypb3r_sxVTftjJG7j-O_YP3RbgwXk"
         }
       ],
       "services": {
