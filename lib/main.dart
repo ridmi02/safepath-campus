@@ -19,18 +19,24 @@ import 'theme/theme_provider.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
-    if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-    }
-    try {
-      await NotificationService.initialize();
-    } catch (e) {
-      debugPrint('Notification service initialization failed: $e');
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } on FirebaseException catch (e) {
+    if (e.code != 'duplicate-app') {
+      debugPrint('Firebase initialization failed: $e');
     }
   } catch (e) {
-    debugPrint('Firebase initialization failed: $e');
+    final s = e.toString();
+    if (!s.contains('duplicate-app')) {
+      debugPrint('Firebase initialization failed: $e');
+    }
+  }
+
+  try {
+    await NotificationService.initialize();
+  } catch (e) {
+    debugPrint('Notification service initialization failed: $e');
   }
   await dotenv.load(fileName: ".env");
 
