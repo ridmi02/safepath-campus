@@ -38,30 +38,20 @@ class EmergencyAlertService {
   Future<void> addEmergencyContact(String name, String phone, String relation) async {
     final prefs = await SharedPreferences.getInstance();
     final contacts = prefs.getStringList(_contactsKey) ?? [];
-    
-    // Check for duplicates based on phone
-    bool exists = contacts.any((item) {
-      try {
-        final map = jsonDecode(item);
-        return map['phone'] == phone;
-      } catch (e) {
-        return item == phone;
-      }
-    });
 
-    if (!exists) {
-      final newContact = {
-        'name': name,
-        'phone': phone,
-        'relation': relation,
-        'addedAt': DateTime.now().toIso8601String(),
-      };
-      contacts.add(jsonEncode(newContact));
-      await prefs.setStringList(_contactsKey, contacts);
-      
-      // Subscribe to notifications for this contact
-      await NotificationService.subscribeToEmergencyUpdates(phone);
-    }
+    // Frontend-only behavior: allow adding multiple contacts freely.
+    final newContact = {
+      'id': DateTime.now().microsecondsSinceEpoch.toString(),
+      'name': name,
+      'phone': phone,
+      'relation': relation,
+      'addedAt': DateTime.now().toIso8601String(),
+    };
+    contacts.add(jsonEncode(newContact));
+    await prefs.setStringList(_contactsKey, contacts);
+
+    // Subscribe to notifications for this contact
+    await NotificationService.subscribeToEmergencyUpdates(phone);
   }
 
   /// Remove emergency contact

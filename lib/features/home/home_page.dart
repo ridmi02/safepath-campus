@@ -112,7 +112,7 @@ class MyHomePage extends StatelessWidget {
             ),
             const SizedBox(height: 32),
             Expanded(
-              child: Column(
+              child: ListView(
                 children: [
                   Row(
                     children: [
@@ -154,19 +154,6 @@ class MyHomePage extends StatelessWidget {
                         child: SizedBox(
                           height: _featureTileHeight,
                           child: _FeatureCard(
-                            icon: Icons.groups_2,
-                            label: 'Companion',
-                            onTap: () {
-                              Navigator.of(context).pushNamed('/companion');
-                            },
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: SizedBox(
-                          height: _featureTileHeight,
-                          child: _FeatureCard(
                             icon: Icons.record_voice_over,
                             label: 'Voice Activation',
                             onTap: () {
@@ -176,6 +163,19 @@ class MyHomePage extends StatelessWidget {
                                       const VoiceActivationPage(),
                                 ),
                               );
+                            },
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: SizedBox(
+                          height: _featureTileHeight,
+                          child: _FeatureCard(
+                            icon: Icons.groups_2,
+                            label: 'Companion',
+                            onTap: () {
+                              Navigator.of(context).pushNamed('/companion');
                             },
                           ),
                         ),
