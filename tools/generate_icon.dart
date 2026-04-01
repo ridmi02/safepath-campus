@@ -31,8 +31,8 @@ List<int> createSimpleIconPNG() {
   
   // Create a simple 512x512 image data
   // For simplicity, we'll create an IHDR chunk
-  final width = 512;
-  final height = 512;
+  const width = 512;
+  const height = 512;
   
   // IHDR chunk: image dimensions and color type
   final ihdr = createIHDRChunk(width, height);
@@ -49,7 +49,7 @@ List<int> createSimpleIconPNG() {
 }
 
 List<int> createIHDRChunk(int width, int height) {
-  final length = 13;
+  const length = 13;
   final chunk = BytesBuilder();
   
   // Chunk length (4 bytes, big-endian)
@@ -102,7 +102,7 @@ List<int> createIDATChunk(int width, int height) {
   final chunk = BytesBuilder();
   
  // Chunk length
-  final length = 1025; // Small placeholder size
+  const length = 1025; // Small placeholder size
   chunk.addByte((length >> 24) & 0xFF);
   chunk.addByte((length >> 16) & 0xFF);
   chunk.addByte((length >> 8) & 0xFF);

@@ -53,7 +53,8 @@ dependencies:
   
   # UI & Design
   cupertino_icons: ^1.0.8
-  flutter_map: ^7.0.2
+  # Pin exact version so IDE/analyzer matches API (flutter_map 8.x breaks Marker/MapOptions).
+  flutter_map: 7.0.2
   latlong2: ^0.9.1
   http: ^1.2.1
   provider: ^6.0.0
