@@ -7,7 +7,14 @@ class DataSharingPolicyPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Data Sharing Policy'),
+        title: const Text(
+          'Data Sharing Policy',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        // Using standard theme properties ensures "Auto Update" works
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+        elevation: 0,
       ),
       body: const SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
@@ -47,4 +54,3 @@ By using the SafePath Campus app, you agree to the collection and use of informa
     );
   }
 }
-
