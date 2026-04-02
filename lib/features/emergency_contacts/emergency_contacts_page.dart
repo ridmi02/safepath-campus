@@ -121,6 +121,7 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
                       await _service.addEmergencyContact(name, phone, relation);
 
                       if (!mounted) return;
+                      if (!ctx.mounted) return;
                       Navigator.of(ctx).pop();
                       await _loadContacts();
                     },
