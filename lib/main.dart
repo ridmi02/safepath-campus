@@ -24,13 +24,21 @@ Future<void> main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    try {
-      await NotificationService.initialize();
-    } catch (e) {
-      debugPrint('Notification service initialization failed: $e');
+  } on FirebaseException catch (e) {
+    if (e.code != 'duplicate-app') {
+      debugPrint('Firebase initialization failed: $e');
     }
   } catch (e) {
-    debugPrint('Firebase initialization failed: $e');
+    final s = e.toString();
+    if (!s.contains('duplicate-app')) {
+      debugPrint('Firebase initialization failed: $e');
+    }
+  }
+
+  try {
+    await NotificationService.initialize();
+  } catch (e) {
+    debugPrint('Notification service initialization failed: $e');
   }
   await dotenv.load(fileName: ".env");
 

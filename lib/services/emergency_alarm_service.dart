@@ -190,9 +190,11 @@ void onStart(ServiceInstance service) async {
 
   // Initialize Firebase for the background isolate
   try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    }
   } catch (e) {
     debugPrint('Firebase init error in background: $e');
   }
