@@ -45,5 +45,9 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>SafePath needs camera access for companion video walk.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>SafePath needs microphone access for companion video walk.</string>
 </dict>
 </plist>
