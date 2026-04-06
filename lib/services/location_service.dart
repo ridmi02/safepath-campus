@@ -39,10 +39,16 @@ class LocationService {
       return;
     }
 
-    final pos = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
-    _updateCurrentPosition(pos);
+    try {
+      final pos = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+      _updateCurrentPosition(pos);
+    } catch (e) {
+      // Handle errors (e.g., location services disabled mid-request)
+    }
 
     _positionSubscription = Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
@@ -64,4 +70,3 @@ class LocationService {
     await _locationController.close();
   }
 }
-

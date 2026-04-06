@@ -1,6 +1,0 @@
-[warning] Unused import: 'package:provider/provider.dart' (C:\Development\safepath-campus\lib\main.dart:3:8)
-[warning] Unused import: 'viewmodels/auth_provider.dart' (C:\Development\safepath-campus\lib\main.dart:6:8)
-[warning] Unused import: 'views/screens/registration_screen.dart' (C:\Development\safepath-campus\lib\main.dart:7:8)
-[warning] Unused import: 'dart:convert' (C:\Development\safepath-campus\tools\generate_icon.dart:2:8)
-[info] Don't invoke 'print' in production code (C:\Development\safepath-campus\tools\generate_icon.dart:19:3)
-[info] Don't invoke 'print' in production code (C:\Development\safepath-campus\tools\generate_icon.dart:20:3)

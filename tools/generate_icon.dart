@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -15,8 +17,8 @@ void main() async {
   final file = File('assets/icon/icon.png');
   await file.writeAsBytes(iconData);
   
-  print('Icon generated successfully: ${file.path}');
-  print('Run "dart run flutter_launcher_icons" to generate platform icons');
+  stdout.writeln('Icon generated successfully: ${file.path}');
+  stdout.writeln('Run "dart run flutter_launcher_icons" to generate platform icons');
 }
 
 List<int> createSimpleIconPNG() {
@@ -29,8 +31,8 @@ List<int> createSimpleIconPNG() {
   
   // Create a simple 512x512 image data
   // For simplicity, we'll create an IHDR chunk
-  final width = 512;
-  final height = 512;
+  const width = 512;
+  const height = 512;
   
   // IHDR chunk: image dimensions and color type
   final ihdr = createIHDRChunk(width, height);
@@ -47,7 +49,7 @@ List<int> createSimpleIconPNG() {
 }
 
 List<int> createIHDRChunk(int width, int height) {
-  final length = 13;
+  const length = 13;
   final chunk = BytesBuilder();
   
   // Chunk length (4 bytes, big-endian)
@@ -100,7 +102,7 @@ List<int> createIDATChunk(int width, int height) {
   final chunk = BytesBuilder();
   
  // Chunk length
-  final length = 1025; // Small placeholder size
+  const length = 1025; // Small placeholder size
   chunk.addByte((length >> 24) & 0xFF);
   chunk.addByte((length >> 16) & 0xFF);
   chunk.addByte((length >> 8) & 0xFF);
@@ -138,6 +140,5 @@ List<int> createIENDChunk() {
   
   return chunk.toBytes().toList();
 }
-
 
 

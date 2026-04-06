@@ -1,23 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 
 import 'firebase_options.dart';
 import 'features/login/login_screen.dart';
 import 'features/registration/registration_provider.dart';
 import 'features/registration/registration_screen.dart';
-import 'features/home/home_page.dart';
+import 'services/notification_service.dart';
 import 'features/home/splash_screen.dart';
+import 'features/home/home_page.dart';
 import 'features/settings/data_sharing_policy_page.dart';
 import 'features/settings/settings_page.dart';
 import 'features/heatmap/campus_map_page.dart';
+import 'features/companion/companion_page.dart';
+import 'features/profile/profile_page.dart';
+import 'features/emergency_contacts/emergency_contacts_page.dart';
+import 'features/fake_call/fake_call_page.dart';
+import 'screens/emergency_active_page.dart';
 import 'theme/theme_provider.dart';
+import 'voice_activation_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  try {
+    await NotificationService.initialize();
+  } catch (e) {
+    debugPrint('Notification service initialization failed: $e');
+  }
+
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    debugPrint('Failed to load .env: $e');
+  }
+
   runApp(
     MultiProvider(
       providers: [
@@ -34,7 +56,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Brand colors (from origin/main)
+    // Brand colors
     const backgroundColor = Color(0xFF0D1B2A);
     const cardColor = Color(0xFF1B263B);
     const titleTextColor = Color(0xFFFFFFFF);
@@ -114,20 +136,27 @@ class MyApp extends StatelessWidget {
           theme: lightTheme,
           darkTheme: darkTheme,
           themeMode: themeProvider.themeMode,
-          // WelcomeScreen is the entry point; it routes to LoginScreen,
-          // which then handles all post-login navigation (admin / student).
+          // WelcomeScreen is the entry point — handles Register/Login routing.
+          // After login, auth flow routes to Admin or Student home.
           home: const WelcomeScreen(),
           routes: {
-            // ── feature/admin routes ─────────────────────────────
             LoginScreen.routeName: (context) => const LoginScreen(),
             '/register': (context) => const RegistrationScreen(),
-            // ── origin/main routes ───────────────────────────────
             '/home': (context) => const MyHomePage(),
             '/splash': (context) => const SplashScreen(),
             '/campus_map': (context) => const CampusMapPage(),
             '/settings': (context) => const SettingsPage(),
-            '/data_sharing_policy': (context) =>
-                const DataSharingPolicyPage(),
+            '/data_sharing_policy': (context) => const DataSharingPolicyPage(),
+            '/voice_activation': (context) => const VoiceActivationPage(),
+            '/profile': (context) => const ProfilePage(),
+            '/emergency_contacts': (context) => const EmergencyContactsPage(),
+            '/companion': (context) => const CompanionPage(),
+            '/fake_call': (context) => const FakeCallPage(),
+            '/emergency_active': (context) {
+              final args = ModalRoute.of(context)!.settings.arguments
+                  as EmergencyActiveArgs;
+              return EmergencyActivePage(args: args);
+            },
           },
         );
       },
@@ -135,7 +164,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// ── WelcomeScreen (from feature/admin) ──────────────────────────────────────
+// ── WelcomeScreen ────────────────────────────────────────────────────────────
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
 
@@ -152,7 +181,6 @@ class WelcomeScreen extends StatelessWidget {
             children: [
               const Spacer(flex: 2),
 
-              // ── App Icon ───────────────────────────────────────
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -167,7 +195,6 @@ class WelcomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
 
-              // ── Title ─────────────────────────────────────────
               Text(
                 'SafePath Campus',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -185,7 +212,6 @@ class WelcomeScreen extends StatelessWidget {
 
               const Spacer(flex: 3),
 
-              // ── Register Button ────────────────────────────────
               SizedBox(
                 width: double.infinity,
                 height: 48,
@@ -198,7 +224,6 @@ class WelcomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
 
-              // ── Login Button ───────────────────────────────────
               SizedBox(
                 width: double.infinity,
                 height: 48,

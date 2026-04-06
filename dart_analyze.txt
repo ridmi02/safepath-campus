@@ -1,0 +1,43 @@
+Analyzing lib...
+
+  error - screens\emergency_screen.dart:2:8 - Target of URI doesn't exist: 'package:telephony/telephony.dart'. Try creating the file referenced by the URI, or try using a URI for a file that does exist. - uri_does_not_exist
+  error - screens\emergency_screen.dart:106:11 - Undefined class 'Telephony'. Try changing the name to the name of an existing class, or creating a class with the name 'Telephony'. - undefined_class
+  error - screens\emergency_screen.dart:106:33 - Undefined name 'Telephony'. Try correcting the name to one that is defined, or defining the name. - undefined_identifier
+  error - services\emergency_alarm_service.dart:11:8 - Target of URI doesn't exist: 'package:telephony/telephony.dart'. Try creating the file referenced by the URI, or try using a URI for a file that does exist. - uri_does_not_exist
+  error - services\emergency_alarm_service.dart:137:11 - The named parameter 'locationSettings' isn't defined. Try correcting the name to an existing named parameter's name, or defining a named parameter with the name 'locationSettings'. - undefined_named_parameter
+  error - services\emergency_alarm_service.dart:148:15 - Undefined class 'Telephony'. Try changing the name to the name of an existing class, or creating a class with the name 'Telephony'. - undefined_class
+  error - services\emergency_alarm_service.dart:148:37 - Undefined name 'Telephony'. Try correcting the name to one that is defined, or defining the name. - undefined_identifier
+  error - services\emergency_alarm_service.dart:153:30 - Undefined class 'SendStatus'. Try changing the name to the name of an existing class, or creating a class with the name 'SendStatus'. - undefined_class
+  error - services\location_service.dart:44:9 - The named parameter 'locationSettings' isn't defined. Try correcting the name to an existing named parameter's name, or defining a named parameter with the name 'locationSettings'. - undefined_named_parameter
+   info - features\deadman_switch\active_trip_screen.dart:81:9 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - features\deadman_switch\active_trip_screen.dart:102:7 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - features\deadman_switch\active_trip_screen.dart:121:7 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - features\deadman_switch\active_trip_screen.dart:124:7 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - features\deadman_switch\active_trip_screen.dart:215:29 - 'WillPopScope' is deprecated and shouldn't be used. Use PopScope instead. The Android predictive back feature will not work with WillPopScope. This feature was deprecated after v3.12.0-1.0.pre. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - features\deadman_switch\active_trip_screen.dart:308:7 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - features\deadman_switch\active_trip_screen.dart:323:7 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - features\deadman_switch\active_trip_screen.dart:355:9 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - features\deadman_switch\active_trip_screen.dart:358:7 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - features\deadman_switch\active_trip_screen.dart:382:28 - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext. - use_build_context_synchronously
+   info - features\deadman_switch\active_trip_screen.dart:566:35 - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - features\deadman_switch\alert_sent_screen.dart:34:7 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - features\deadman_switch\alert_sent_screen.dart:58:9 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - features\deadman_switch\alert_sent_screen.dart:69:7 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - features\deadman_switch\alert_sent_screen.dart:112:17 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - features\deadman_switch\alert_sent_screen.dart:114:17 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - features\deadman_switch\alert_sent_screen.dart:190:37 - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - features\deadman_switch\deadman_service.dart:23:5 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - features\deadman_switch\deadman_service.dart:32:5 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - features\deadman_switch\deadman_service.dart:55:7 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - features\deadman_switch\deadman_service.dart:66:5 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - features\deadman_switch\deadman_service.dart:85:5 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - features\deadman_switch\deadman_setup_screen.dart:86:7 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - features\deadman_switch\deadman_setup_screen.dart:120:40 - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - features\deadman_switch\deadman_setup_screen.dart:122:59 - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - features\deadman_switch\deadman_setup_screen.dart:168:17 - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - features\emergency_contacts\emergency_contacts_page.dart:161:41 - Unnecessary use of multiple underscores. Try using '_'. - unnecessary_underscores
+   info - screens\emergency_screen.dart:2:8 - The imported package 'telephony' isn't a dependency of the importing package. Try adding a dependency for 'telephony' in the 'pubspec.yaml' file. - depend_on_referenced_packages
+   info - services\emergency_alarm_service.dart:11:8 - The imported package 'telephony' isn't a dependency of the importing package. Try adding a dependency for 'telephony' in the 'pubspec.yaml' file. - depend_on_referenced_packages
+   info - voice_activation_page.dart:126:24 - Missing type annotation. Try adding a type annotation. - strict_top_level_inference
+
+39 issues found.
