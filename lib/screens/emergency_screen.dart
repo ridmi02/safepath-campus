@@ -21,11 +21,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
   List<Map<String, dynamic>> _emergencyContacts = [];
   int _countdownSeconds = 0;
   bool _showSosCountdown = false;
-  
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _relationController = TextEditingController();
-  
+
   // Safety Tools State
   final AudioPlayer _sirenPlayer = AudioPlayer();
   bool _isSirenPlaying = false;
@@ -96,9 +92,6 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _phoneController.dispose();
-    _relationController.dispose();
     _sirenPlayer.dispose();
     _pulseController.dispose();
     super.dispose();
@@ -270,166 +263,6 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
         const SnackBar(content: Text('Alert Cancelled'), duration: Duration(seconds: 2)),
       );
     }
-  }
-
-  void _addEmergencyContact() async {
-    final name = _nameController.text.trim();
-    final phone = _phoneController.text.trim();
-    final relation = _relationController.text.trim();
-    
-    if (name.isEmpty || phone.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter name and phone number')),
-      );
-      return;
-    }
-
-    await _alertService.addEmergencyContact(name, phone, relation);
-    
-    _nameController.clear();
-    _phoneController.clear();
-    _relationController.clear();
-    await _loadPreferences();
-    
-    if (mounted) {
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$name added to contacts')),
-      );
-    }
-  }
-
-  void _removeEmergencyContact(String phone) async {
-    await _alertService.removeEmergencyContact(phone);
-
-    await _loadPreferences();
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$phone removed from contacts')),
-      );
-    }
-  }
-
-  void _showAddContactDialog() {
-    _nameController.clear();
-    _phoneController.clear();
-    _relationController.clear();
-    
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-          top: 24,
-          left: 24,
-          right: 24,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Add Trusted Contact',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF0D47A1),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'We will alert them when you trigger SOS.',
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 24),
-            _buildModernTextField(
-              controller: _nameController,
-              label: 'Full Name',
-              icon: Icons.person_outline,
-            ),
-            const SizedBox(height: 16),
-            _buildModernTextField(
-              controller: _phoneController,
-              label: 'Phone Number',
-              icon: Icons.phone_outlined,
-              keyboardType: TextInputType.phone,
-            ),
-            const SizedBox(height: 16),
-            _buildModernTextField(
-              controller: _relationController,
-              label: 'Relationship (Optional)',
-              icon: Icons.favorite_border,
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: _addEmergencyContact,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0D47A1),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                child: const Text(
-                  'Save Contact',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildModernTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFF5F7FA),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
-      ),
-      child: TextField(
-        controller: controller,
-        keyboardType: keyboardType,
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon, color: const Color(0xFF0D47A1), size: 22),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          labelStyle: TextStyle(color: Colors.grey[600]),
-        ),
-      ),
-    );
   }
 
   Widget _buildToolCard({

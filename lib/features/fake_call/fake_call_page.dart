@@ -216,7 +216,8 @@ class _FakeCallPageState extends State<FakeCallPage> {
                   ),
                   const SizedBox(height: 10),
                   DropdownButtonFormField<String>(
-                    value: _selectedRingtone,
+                    key: ValueKey<String>(_selectedRingtone),
+                    initialValue: _selectedRingtone,
                     decoration: const InputDecoration(
                       labelText: 'Ringtone',
                       prefixIcon: Icon(Icons.music_note),

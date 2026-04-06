@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:safepath_campus/services/app_theme.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -24,7 +23,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D47A1),
+      backgroundColor: const Color(0xFF0D1B2A),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

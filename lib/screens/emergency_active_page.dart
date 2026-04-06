@@ -361,11 +361,10 @@ class _EmergencyActivePageState extends State<EmergencyActivePage> {
                             await Clipboard.setData(
                               const ClipboardData(text: 'SOS! I need help.'),
                             );
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Emergency message copied')),
-                              );
-                            }
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Emergency message copied')),
+                            );
                           },
                           icon: const Icon(Icons.copy),
                           label: const Text('Copy message'),
