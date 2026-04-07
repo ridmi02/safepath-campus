@@ -535,14 +535,14 @@ class _CampusMapPageState extends State<CampusMapPage> {
                           );
                         }
                       } catch (_) {
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
                               content: Text(
                                 'Could not save incident (missing permissions).',
                               ),
-                            ),
-                          );
+                          ),
+                        );
                         }
                       }
                     },
@@ -1063,24 +1063,24 @@ class _CampusMapPageState extends State<CampusMapPage> {
 
     return Material(
       elevation: 5,
-      borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(12),
       color: colorScheme.surface.withValues(alpha: 0.96),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
               routeHeader.toString(),
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
                 Expanded(
                   child: _TravelModeTime(
                     icon: Icons.directions_walk,
@@ -1104,12 +1104,12 @@ class _CampusMapPageState extends State<CampusMapPage> {
                     colorScheme: colorScheme,
                     theme: theme,
                   ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -1409,13 +1409,13 @@ class _CampusMapPageState extends State<CampusMapPage> {
               },
             ),
             children: [
-              TileLayer(
+                TileLayer(
                 // Voyager at night too: Carto dark_all washes out labels; Voyager keeps
                 // roads and place names readable while staying colorful.
-                urlTemplate:
+                  urlTemplate:
                     'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
                 subdomains: const ['a', 'b', 'c', 'd'],
-                userAgentPackageName: 'org.safepath.campus',
+                  userAgentPackageName: 'org.safepath.campus',
                 retinaMode: MediaQuery.devicePixelRatioOf(context) > 1.0,
                 // Keep nearby tiles in memory while panning for smoother UX.
                 keepBuffer: 5,

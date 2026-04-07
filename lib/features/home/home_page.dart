@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:safepath_campus/screens/emergency_screen.dart';
 import 'package:safepath_campus/services/firebase_service.dart';
-import 'package:safepath_campus/voice_activation_page.dart';
+import 'package:safepath_campus/services/voice_activation_page.dart';
+import 'package:safepath_campus/services/emergency_alarm_service.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -80,9 +81,11 @@ class _MyHomePageState extends State<MyHomePage>
     super.dispose();
   }
 
-  void _triggerSOS(BuildContext context) {
+  Future<void> _triggerSOS(BuildContext context) async {
     HapticFeedback.mediumImpact();
+    await EmergencyAlertService().activateEmergency();
     const FirebaseService().logSosActivated();
+    if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('SOS Emergency Alert Sent!'),
@@ -95,13 +98,8 @@ class _MyHomePageState extends State<MyHomePage>
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final int scaffoldBgVal =
-        Theme.of(context).scaffoldBackgroundColor.toARGB32();
-    final int scaffoldR = (scaffoldBgVal >> 16) & 0xFF;
-    final int scaffoldG = (scaffoldBgVal >> 8) & 0xFF;
-    final int scaffoldB = scaffoldBgVal & 0xFF;
     final Color heroTint =
-        Color.fromARGB((0.06 * 255).round(), scaffoldR, scaffoldG, scaffoldB);
+        Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.06);
 
     return Scaffold(
       appBar: AppBar(
