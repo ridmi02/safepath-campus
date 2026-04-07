@@ -23,10 +23,13 @@ class _MyHomePageState extends State<MyHomePage>
   late final AnimationController _entranceController;
   late final Animation<double> _sosOpacity;
   late final Animation<Offset> _sosSlide;
+  late final Animation<double> _sosScale;
   late final Animation<double> _row1Opacity;
   late final Animation<Offset> _row1Slide;
+  late final Animation<double> _row1Scale;
   late final Animation<double> _row2Opacity;
   late final Animation<Offset> _row2Slide;
+  late final Animation<double> _row2Scale;
 
   @override
   void initState() {
@@ -49,6 +52,12 @@ class _MyHomePageState extends State<MyHomePage>
       begin: const Offset(0, 0.1),
       end: Offset.zero,
     ).animate(sosAnim);
+    _sosScale = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _entranceController,
+        curve: Interval(0.12, 0.6, curve: Curves.elasticOut),
+      ),
+    );
 
     final r1 = interval(0.28, 0.72);
     _row1Opacity = Tween<double>(begin: 0, end: 1).animate(r1);
@@ -56,6 +65,12 @@ class _MyHomePageState extends State<MyHomePage>
       begin: const Offset(0, 0.06),
       end: Offset.zero,
     ).animate(r1);
+    _row1Scale = Tween<double>(begin: 0.9, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _entranceController,
+        curve: Interval(0.28, 0.8, curve: Curves.elasticOut),
+      ),
+    );
 
     final r2 = interval(0.42, 0.88);
     _row2Opacity = Tween<double>(begin: 0, end: 1).animate(r2);
@@ -63,6 +78,12 @@ class _MyHomePageState extends State<MyHomePage>
       begin: const Offset(0, 0.06),
       end: Offset.zero,
     ).animate(r2);
+    _row2Scale = Tween<double>(begin: 0.9, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _entranceController,
+        curve: Interval(0.42, 0.96, curve: Curves.elasticOut),
+      ),
+    );
 
     _entranceController.forward();
   }
@@ -93,8 +114,17 @@ class _MyHomePageState extends State<MyHomePage>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('SafePath Campus'),
+        title: const Text(
+          'SafePath Campus',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 20,
+          ),
+        ),
         centerTitle: true,
+        elevation: 2,
+        shadowColor: colorScheme.shadow.withValues(alpha: 0.2),
+        surfaceTintColor: colorScheme.surface,
         actions: [
           IconButton(
             icon: const Icon(Icons.person),
@@ -114,6 +144,31 @@ class _MyHomePageState extends State<MyHomePage>
               painter: _HomeBackdropPainter(colorScheme: colorScheme),
             ),
           ),
+          // Decorative elements
+          Positioned(
+            top: 120,
+            right: 40,
+            child: _DecorCircle(
+              diameter: 24,
+              color: colorScheme.primary.withValues(alpha: 0.1),
+            ),
+          ),
+          Positioned(
+            top: 280,
+            left: 30,
+            child: _DecorCircle(
+              diameter: 18,
+              color: colorScheme.secondary.withValues(alpha: 0.08),
+            ),
+          ),
+          Positioned(
+            bottom: 200,
+            right: 60,
+            child: _DecorCircle(
+              diameter: 32,
+              color: colorScheme.tertiary.withValues(alpha: 0.06),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: CustomScrollView(
@@ -127,38 +182,49 @@ class _MyHomePageState extends State<MyHomePage>
                     opacity: _sosOpacity,
                     child: SlideTransition(
                       position: _sosSlide,
-                      child: Center(
-                        child: Semantics(
-                          button: true,
-                          label: 'SOS Emergency',
-                          child: Container(
-                            width: 160,
-                            height: 160,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: const Color(0xFFE63946),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFFE63946)
-                                      .withAlpha((0.4 * 255).round()),
-                                  blurRadius: 20,
-                                  spreadRadius: 2,
-                                ),
-                              ],
-                            ),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: () => _triggerSOS(context),
-                                customBorder: const CircleBorder(),
-                                child: const Center(
-                                  child: Text(
-                                    'SOS',
-                                    style: TextStyle(
-                                      fontSize: 52,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xFFFFFFFF),
-                                      letterSpacing: 2,
+                      child: ScaleTransition(
+                        scale: _sosScale,
+                        child: Center(
+                          child: Semantics(
+                            button: true,
+                            label: 'SOS Emergency',
+                            child: Container(
+                              width: 160,
+                              height: 160,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: const Color(0xFFE63946),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFFE63946)
+                                        .withAlpha((0.4 * 255).round()),
+                                    blurRadius: 30,
+                                    spreadRadius: 4,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                  BoxShadow(
+                                    color: const Color(0xFFE63946)
+                                        .withAlpha((0.2 * 255).round()),
+                                    blurRadius: 60,
+                                    spreadRadius: 8,
+                                    offset: const Offset(0, 12),
+                                  ),
+                                ],
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () => _triggerSOS(context),
+                                  customBorder: const CircleBorder(),
+                                  child: const Center(
+                                    child: Text(
+                                      'SOS',
+                                      style: TextStyle(
+                                        fontSize: 52,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFFFFFFFF),
+                                        letterSpacing: 2,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -192,44 +258,47 @@ class _MyHomePageState extends State<MyHomePage>
                     opacity: _row1Opacity,
                     child: SlideTransition(
                       position: _row1Slide,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: SizedBox(
-                              height: _featureTileHeight,
-                              child: _FeatureCard(
-                                cardRadius: _cardRadius,
-                                icon: Icons.emergency_share,
-                                label: 'Emergency Alert System',
-                                onTap: () {
-                                  HapticFeedback.lightImpact();
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const EmergencyScreen(),
-                                    ),
-                                  );
-                                },
+                      child: ScaleTransition(
+                        scale: _row1Scale,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: SizedBox(
+                                height: _featureTileHeight,
+                                child: _FeatureCard(
+                                  cardRadius: _cardRadius,
+                                  icon: Icons.emergency_share,
+                                  label: 'Emergency Alert System',
+                                  onTap: () {
+                                    HapticFeedback.lightImpact();
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const EmergencyScreen(),
+                                      ),
+                                    );
+                                  },
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: _rowGap),
-                          Expanded(
-                            child: SizedBox(
-                              height: _featureTileHeight,
-                              child: _FeatureCard(
-                                cardRadius: _cardRadius,
-                                icon: Icons.map,
-                                label: 'Map',
-                                onTap: () {
-                                  HapticFeedback.lightImpact();
-                                  Navigator.of(context)
-                                      .pushNamed('/campus_map');
-                                },
+                            const SizedBox(width: _rowGap),
+                            Expanded(
+                              child: SizedBox(
+                                height: _featureTileHeight,
+                                child: _FeatureCard(
+                                  cardRadius: _cardRadius,
+                                  icon: Icons.map,
+                                  label: 'Map',
+                                  onTap: () {
+                                    HapticFeedback.lightImpact();
+                                    Navigator.of(context)
+                                        .pushNamed('/campus_map');
+                                  },
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -243,44 +312,47 @@ class _MyHomePageState extends State<MyHomePage>
                     opacity: _row2Opacity,
                     child: SlideTransition(
                       position: _row2Slide,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: SizedBox(
-                              height: _featureTileHeight,
-                              child: _FeatureCard(
-                                cardRadius: _cardRadius,
-                                icon: Icons.record_voice_over,
-                                label: 'Voice Activation',
-                                onTap: () {
-                                  HapticFeedback.lightImpact();
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const VoiceActivationPage(),
-                                    ),
-                                  );
-                                },
+                      child: ScaleTransition(
+                        scale: _row2Scale,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: SizedBox(
+                                height: _featureTileHeight,
+                                child: _FeatureCard(
+                                  cardRadius: _cardRadius,
+                                  icon: Icons.record_voice_over,
+                                  label: 'Voice Activation',
+                                  onTap: () {
+                                    HapticFeedback.lightImpact();
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const VoiceActivationPage(),
+                                      ),
+                                    );
+                                  },
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: _rowGap),
-                          Expanded(
-                            child: SizedBox(
-                              height: _featureTileHeight,
-                              child: _FeatureCard(
-                                cardRadius: _cardRadius,
-                                icon: Icons.groups_2,
-                                label: 'Companion',
-                                onTap: () {
-                                  HapticFeedback.lightImpact();
-                                  Navigator.of(context)
-                                      .pushNamed('/companion');
-                                },
+                            const SizedBox(width: _rowGap),
+                            Expanded(
+                              child: SizedBox(
+                                height: _featureTileHeight,
+                                child: _FeatureCard(
+                                  cardRadius: _cardRadius,
+                                  icon: Icons.groups_2,
+                                  label: 'Companion',
+                                  onTap: () {
+                                    HapticFeedback.lightImpact();
+                                    Navigator.of(context)
+                                        .pushNamed('/companion');
+                                  },
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -294,24 +366,27 @@ class _MyHomePageState extends State<MyHomePage>
                     opacity: _row2Opacity,
                     child: SlideTransition(
                       position: _row2Slide,
-                      child: Center(
-                        child: FractionallySizedBox(
-                          widthFactor: 0.5,
-                          child: SizedBox(
-                            height: _featureTileHeight,
-                            child: _FeatureCard(
-                              cardRadius: _cardRadius,
-                              icon: Icons.shield_rounded,
-                              label: "Deadman's Switch",
-                              onTap: () {
-                                HapticFeedback.lightImpact();
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const DeadmanSetupScreen(),
-                                  ),
-                                );
-                              },
+                      child: ScaleTransition(
+                        scale: _row2Scale,
+                        child: Center(
+                          child: FractionallySizedBox(
+                            widthFactor: 0.5,
+                            child: SizedBox(
+                              height: _featureTileHeight,
+                              child: _FeatureCard(
+                                cardRadius: _cardRadius,
+                                icon: Icons.shield_rounded,
+                                label: "Deadman's Switch",
+                                onTap: () {
+                                  HapticFeedback.lightImpact();
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const DeadmanSetupScreen(),
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
                           ),
                         ),
@@ -339,37 +414,59 @@ class _HomeBackdropPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Primary gradient wash
     final wash = Paint()
       ..shader = RadialGradient(
         colors: [
-          colorScheme.primary.withValues(alpha: 0.06),
+          colorScheme.primary.withValues(alpha: 0.08),
+          colorScheme.primary.withValues(alpha: 0.02),
           colorScheme.primary.withValues(alpha: 0),
         ],
+        stops: const [0.0, 0.6, 1.0],
       ).createShader(Rect.fromCircle(
         center: Offset(size.width * 0.85, size.height * 0.08),
-        radius: size.shortestSide * 0.55,
+        radius: size.shortestSide * 0.6,
       ));
     canvas.drawRect(Offset.zero & size, wash);
 
+    // Secondary gradient wash
     final wash2 = Paint()
       ..shader = RadialGradient(
         colors: [
-          colorScheme.outline.withValues(alpha: 0.08),
+          colorScheme.outline.withValues(alpha: 0.1),
+          colorScheme.outline.withValues(alpha: 0.03),
           colorScheme.outline.withValues(alpha: 0),
         ],
+        stops: const [0.0, 0.5, 1.0],
       ).createShader(Rect.fromCircle(
         center: Offset(size.width * 0.1, size.height * 0.72),
-        radius: size.shortestSide * 0.45,
+        radius: size.shortestSide * 0.5,
       ));
     canvas.drawRect(Offset.zero & size, wash2);
 
+    // Tertiary subtle accent
+    final wash3 = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          colorScheme.secondary.withValues(alpha: 0.04),
+          colorScheme.secondary.withValues(alpha: 0),
+        ],
+      ).createShader(Rect.fromCircle(
+        center: Offset(size.width * 0.5, size.height * 0.4),
+        radius: size.shortestSide * 0.3,
+      ));
+    canvas.drawRect(Offset.zero & size, wash3);
+
+    // Enhanced dot pattern
     final dot = Paint()
-      ..color = colorScheme.outline.withValues(alpha: 0.11)
+      ..color = colorScheme.outline.withValues(alpha: 0.08)
       ..style = PaintingStyle.fill;
-    const step = 26.0;
+    const step = 28.0;
     for (double x = 0; x < size.width + step; x += step) {
       for (double y = 0; y < size.height + step; y += step) {
-        canvas.drawCircle(Offset(x, y), 0.9, dot);
+        final opacity = 0.04 + (x / size.width) * 0.06; // Vary opacity based on position
+        dot.color = colorScheme.outline.withValues(alpha: opacity);
+        canvas.drawCircle(Offset(x, y), 1.2, dot);
       }
     }
   }
@@ -378,32 +475,6 @@ class _HomeBackdropPainter extends CustomPainter {
   bool shouldRepaint(covariant _HomeBackdropPainter oldDelegate) =>
       oldDelegate.colorScheme.primary != colorScheme.primary ||
       oldDelegate.colorScheme.outline != colorScheme.outline;
-}
-
-class _HeroStripesPainter extends CustomPainter {
-  _HeroStripesPainter({required this.color});
-
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final p = Paint()
-      ..color = color
-      ..strokeWidth = 1
-      ..style = PaintingStyle.stroke;
-    const spacing = 18.0;
-    for (double i = -size.height; i < size.width + size.height; i += spacing) {
-      canvas.drawLine(
-        Offset(i, 0),
-        Offset(i + size.height, size.height),
-        p,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _HeroStripesPainter oldDelegate) =>
-      oldDelegate.color != color;
 }
 
 // ── Helper widgets ───────────────────────────────────────────────────────────
@@ -451,14 +522,22 @@ class _SectionDivider extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Container(
-            width: 6,
-            height: 6,
+            width: 8,
+            height: 8,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: colorScheme.primary.withValues(alpha: 0.35),
+              color: colorScheme.primary.withValues(alpha: 0.4),
               border: Border.all(
-                color: colorScheme.outline.withValues(alpha: 0.35),
+                color: colorScheme.outline.withValues(alpha: 0.4),
+                width: 1.5,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: colorScheme.primary.withValues(alpha: 0.2),
+                  blurRadius: 4,
+                  spreadRadius: 1,
+                ),
+              ],
             ),
           ),
         ),
@@ -503,18 +582,19 @@ class _FeatureCard extends StatelessWidget {
             width: 1,
           ),
         ),
-        elevation: 4,
+        elevation: 8,
+        shadowColor: colorScheme.shadow.withValues(alpha: 0.3),
         color: cardBg,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(cardRadius),
           child: Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, size: 42, color: cardText),
-                const SizedBox(height: 8),
+                Icon(icon, size: 48, color: cardText),
+                const SizedBox(height: 12),
                 Flexible(
                   child: Text(
                     label,
@@ -522,9 +602,9 @@ class _FeatureCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      height: 1.25,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      height: 1.2,
                       color: cardText,
                     ),
                   ),

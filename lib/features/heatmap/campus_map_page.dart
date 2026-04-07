@@ -10,20 +10,20 @@ import 'package:safepath_campus/models/incident.dart';
 import 'package:safepath_campus/services/incident_service.dart';
 import 'package:safepath_campus/services/location_service.dart';
 
-/// Darkens midtones and slightly boosts contrast so roads stand out on
-/// Carto Voyager tiles (yellow/orange road lines read more clearly).
+/// Enhances contrast for better road visibility on dark backgrounds
+/// while preserving natural colors of Carto Voyager tiles.
 const _kMapRoadContrastMatrix = <double>[
-  1.16, 0, 0, 0, -18,
-  0, 1.16, 0, 0, -18,
-  0, 0, 1.12, 0, -22,
+  1.25, 0, 0, 0, -5,   // Red: slight boost, minimal darkening
+  0, 1.25, 0, 0, -5,   // Green: slight boost, minimal darkening
+  0, 0, 1.2, 0, -8,    // Blue: slight boost, minimal darkening
   0, 0, 0, 1, 0,
 ];
 
-/// Extra saturation at night (applied after road contrast).
+/// Night mode: adds warmth and slight saturation boost
 const _kMapNightSaturationMatrix = <double>[
-  1.08, 0, 0, 0, 0,
-  0, 1.06, 0, 0, 0,
-  0, 0, 1.14, 0, 0,
+  1.15, 0, 0, 0, 8,    // Red: slight warmth boost
+  0, 1.1, 0, 0, 4,     // Green: subtle boost
+  0, 0, 1.05, 0, -2,   // Blue: slight cool down
   0, 0, 0, 1, 0,
 ];
 
@@ -1411,31 +1411,43 @@ class _CampusMapPageState extends State<CampusMapPage> {
             ),
             children: [
                 TileLayer(
-                // Voyager at night too: Carto dark_all washes out labels; Voyager keeps
-                // roads and place names readable while staying colorful.
+                  // Use CartoDB Positron for better contrast on dark backgrounds
+                  // Positron has clean black text on light backgrounds, but we'll invert it
                   urlTemplate:
-                    'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-                subdomains: const ['a', 'b', 'c', 'd'],
+                    'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+                  subdomains: const ['a', 'b', 'c', 'd'],
                   userAgentPackageName: 'org.safepath.campus',
-                retinaMode: MediaQuery.devicePixelRatioOf(context) > 1.0,
-                // Keep nearby tiles in memory while panning for smoother UX.
-                keepBuffer: 5,
-                // Road contrast + optional night saturation (same tile URL).
-                tileBuilder: (context, tileWidget, tile) {
-                  Widget child = ColorFiltered(
-                    colorFilter: const ColorFilter.matrix(_kMapRoadContrastMatrix),
-                    child: tileWidget,
-                  );
-                  if (_useNightTiles) {
+                  retinaMode: MediaQuery.devicePixelRatioOf(context) > 1.0,
+                  // Keep nearby tiles in memory while panning for smoother UX.
+                  keepBuffer: 5,
+                  // Apply color inversion and contrast enhancement for dark theme
+                  tileBuilder: (context, tileWidget, tile) {
+                    // First invert colors to make light map dark
+                    Widget child = ColorFiltered(
+                      colorFilter: const ColorFilter.matrix(<double>[
+                        -1, 0, 0, 0, 255,  // Invert red
+                        0, -1, 0, 0, 255,  // Invert green
+                        0, 0, -1, 0, 255,  // Invert blue
+                        0, 0, 0, 1, 0,     // Alpha unchanged
+                      ]),
+                      child: tileWidget,
+                    );
+                    // Then apply contrast enhancement
                     child = ColorFiltered(
-                      colorFilter:
-                          const ColorFilter.matrix(_kMapNightSaturationMatrix),
+                      colorFilter: const ColorFilter.matrix(_kMapRoadContrastMatrix),
                       child: child,
                     );
-                  }
-                  return child;
-                },
-              ),
+                    // Apply night mode saturation if needed
+                    if (_useNightTiles) {
+                      child = ColorFiltered(
+                        colorFilter:
+                            const ColorFilter.matrix(_kMapNightSaturationMatrix),
+                        child: child,
+                      );
+                    }
+                    return child;
+                  },
+                ),
               if (_showHeatmap)
                 CircleLayer(circles: _buildHeatmapCircles()),
               if (_showCrowdOverlay)
