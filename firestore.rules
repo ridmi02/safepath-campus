@@ -2,24 +2,30 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // --- User profile documents (your original rules) ---
-    // If you used capital "Users" in the console:
+
+    // Voice activation: events (SOS / panic) + per-user panic word doc
+    match /voice_activation_events/{eventId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if false;
+    }
+
+    match /voice_activation/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
     match /Users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // This app writes to collection "users" (lowercase) — same rule shape:
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // --- Notification queue (your original rules) ---
     match /notifications/{notificationId} {
       allow create: if request.auth != null;
       allow read: if false;
     }
 
-    // --- Companion: virtual walk-home (rooms + published requests) ---
     match /companion_rooms/{roomId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null
@@ -42,7 +48,6 @@ service cloud.firestore {
       allow update, delete: if request.auth != null;
     }
 
-    // --- Used elsewhere in this app (anonymous auth) ---
     match /incidents/{incidentId} {
       allow create: if request.auth != null;
       allow read: if request.auth != null;
@@ -52,7 +57,5 @@ service cloud.firestore {
       allow create: if request.auth != null;
       allow read: if false;
     }
-
-    // Deny everything else by default (no blanket allow).
   }
 }
