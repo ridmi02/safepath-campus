@@ -3,6 +3,7 @@ import 'package:telephony/telephony.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_vibrate/flutter_vibrate.dart';
 import 'dart:ui';
+import 'package:permission_handler/permission_handler.dart';
 import '../services/emergency_alarm_service.dart';
 import '../services/app_theme.dart';
 import 'emergency_active_page.dart';
@@ -16,6 +17,7 @@ class EmergencyScreen extends StatefulWidget {
 
 class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProviderStateMixin {
   final EmergencyAlertService _alertService = EmergencyAlertService();
+  final _formKey = GlobalKey<FormState>();
   
   bool _isAlertActive = false;
   List<Map<String, dynamic>> _emergencyContacts = [];
@@ -110,10 +112,27 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
   }
 
   Future<void> _checkPermissions() async {
-    final Telephony telephony = Telephony.instance;
-    bool? permissionsGranted = await telephony.requestPhoneAndSmsPermissions;
-    if (permissionsGranted != true) {
-      debugPrint("SMS permissions not granted");
+    // Requesting critical permissions early ensures background services function.
+    // SMS is needed for Telephony, Location for GPS coordinates, 
+    // and Notification for the Foreground Service.
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.sms,
+      Permission.location,
+      Permission.notification,
+    ].request();
+
+    // Also trigger Telephony's internal permission requester 
+    // to ensure the plugin state is ready.
+    await Telephony.instance.requestPhoneAndSmsPermissions;
+
+    if (statuses[Permission.sms]?.isDenied ?? false) {
+      debugPrint("SMS permission denied");
+    }
+    if (statuses[Permission.location]?.isDenied ?? false) {
+      debugPrint("Location permission denied");
+    }
+    if (statuses[Permission.notification]?.isDenied ?? false) {
+      debugPrint("Notification permission denied");
     }
   }
 
@@ -213,6 +232,9 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
       _showSosCountdown = false;
     });
 
+    // Trigger the actual SOS alerts (SMS and Firestore)
+    await _alertService.activateEmergency();
+
     if (!mounted) return;
     Navigator.of(context).pushNamed(
       '/emergency_active',
@@ -273,14 +295,23 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
   }
 
   void _addEmergencyContact() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    // Ensure permissions are granted before adding the first contact
+    if (!(await Permission.sms.isGranted) || !(await Permission.location.isGranted)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please grant SMS and Location permissions to enable SOS.')),
+      );
+      await _checkPermissions();
+      return; 
+    }
+
     final name = _nameController.text.trim();
     final phone = _phoneController.text.trim();
     final relation = _relationController.text.trim();
     
-    if (name.isEmpty || phone.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter name and phone number')),
-      );
+    if (_alertService.contactPhoneExists(_emergencyContacts, phone)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('This phone number is already in your list.')));
       return;
     }
 
@@ -291,6 +322,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
     _relationController.clear();
     await _loadPreferences();
     
+    if (!mounted) return;
     if (mounted) {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -299,131 +331,26 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
     }
   }
 
-  void _removeEmergencyContact(String phone) async {
-    await _alertService.removeEmergencyContact(phone);
-
-    await _loadPreferences();
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$phone removed from contacts')),
-      );
-    }
-  }
-
-  void _showAddContactDialog() {
-    _nameController.clear();
-    _phoneController.clear();
-    _relationController.clear();
-    
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-          top: 24,
-          left: 24,
-          right: 24,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Add Trusted Contact',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF0D47A1),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'We will alert them when you trigger SOS.',
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 24),
-            _buildModernTextField(
-              controller: _nameController,
-              label: 'Full Name',
-              icon: Icons.person_outline,
-            ),
-            const SizedBox(height: 16),
-            _buildModernTextField(
-              controller: _phoneController,
-              label: 'Phone Number',
-              icon: Icons.phone_outlined,
-              keyboardType: TextInputType.phone,
-            ),
-            const SizedBox(height: 16),
-            _buildModernTextField(
-              controller: _relationController,
-              label: 'Relationship (Optional)',
-              icon: Icons.favorite_border,
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: _addEmergencyContact,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0D47A1),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                child: const Text(
-                  'Save Contact',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildModernTextField({
     required TextEditingController controller,
     required String label,
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F7FA),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
       ),
-      child: TextField(
+      child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
+        validator: validator,
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: Icon(icon, color: const Color(0xFF0D47A1), size: 22),
+          prefixIcon: Icon(icon, color: Theme.of(context).colorScheme.primary, size: 22),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           labelStyle: TextStyle(color: Colors.grey[600]),
@@ -451,18 +378,18 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
         ],
       ),
       child: Card(
-        color: color,
+      color: color,
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        child: InkWell(
-          onTap: onTap,
+      child: InkWell(
+        onTap: onTap,
           borderRadius: BorderRadius.circular(18),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 32, color: textColor),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 32, color: textColor),
                 const SizedBox(height: 10),
                 Text(
                   label,
@@ -585,31 +512,67 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
   }
 
   Widget _buildContactsNavCard() {
-    final theme = Theme.of(context);
+    final primaryColor = Theme.of(context).colorScheme.primary;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Emergency contacts',
-          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 10),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: () => Navigator.of(context).pushNamed('/emergency_contacts'),
-            icon: const Icon(Icons.person_add_alt_1_rounded),
-            label: Text(
-              _emergencyContacts.isEmpty
-                  ? 'Add emergency contacts'
-                  : 'Manage emergency contacts (${_emergencyContacts.length})',
+        InkWell(
+          onTap: () => Navigator.of(context).pushNamed('/emergency_contacts'),
+          borderRadius: BorderRadius.circular(24),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: primaryColor.withValues(alpha: 0.1)),
             ),
-            style: ElevatedButton.styleFrom(
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
+            child: Row(
+              children: [
+                if (_emergencyContacts.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: primaryColor.withValues(alpha: 0.1), shape: BoxShape.circle),
+                    child: Icon(Icons.people_outline, color: primaryColor),
+                  )
+                else
+                  SizedBox(
+                    width: 100,
+                    height: 40,
+                    child: Stack(
+                      children: List.generate(_emergencyContacts.length > 3 ? 3 : _emergencyContacts.length, (i) {
+                        final name = _emergencyContacts[i]['name'] ?? '?';
+                        return Positioned(
+                          left: i * 25,
+                          child: CircleAvatar(
+                            radius: 20,
+                            backgroundColor: primaryColor.withValues(alpha: 0.8),
+                            child: Text(name[0].toUpperCase(), style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _emergencyContacts.isEmpty ? 'Add emergency contacts' : 'Manage Contacts',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      Text('${_emergencyContacts.length} people will be alerted', style: const TextStyle(color: Colors.black54, fontSize: 12)),
+                    ],
+                  ),
+                ),
+                Icon(Icons.arrow_forward_ios, size: 16, color: primaryColor.withValues(alpha: 0.5)),
+              ],
             ),
           ),
         ),
@@ -771,7 +734,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
         _isAlertActive ? AppTheme.warningRed.withValues(alpha: 0.1) : const Color(0xFFE8F5E9);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
+      backgroundColor: const Color(0xFFF3E5F5),
       appBar: AppBar(
         title: const Text('Emergency Alert System'),
         centerTitle: true,
@@ -780,17 +743,17 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
       body: Stack(
         children: [
           SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 width: double.infinity,
                 margin: const EdgeInsets.only(bottom: 20),
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
                   gradient: LinearGradient(
                     colors: _isAlertActive
                         ? const [Color(0xFFFFE2E2), Color(0xFFFFF1F1)]
@@ -806,9 +769,9 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
                       offset: const Offset(0, 8),
                     ),
                   ],
-                ),
-                child: Row(
-                  children: [
+                  ),
+                  child: Row(
+                    children: [
                     CircleAvatar(
                       radius: 20,
                       backgroundColor: statusBg,
@@ -822,9 +785,9 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                      Text(
                             _isAlertActive ? 'Emergency Active' : 'System Ready',
-                            style: TextStyle(
+                        style: TextStyle(
                               color: statusColor,
                               fontWeight: FontWeight.w800,
                               fontSize: 16,
@@ -836,9 +799,9 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
                             style: const TextStyle(fontSize: 12, color: Colors.black54),
                           ),
                         ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
                 ),
               ),
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'emergency_screen.dart';
-import 'voice_activation_screen.dart';
+import '../services/voice_activation_page.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -54,7 +54,7 @@ class HomeScreen extends StatelessWidget {
                 textColor: darkBlue,
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const VoiceActivationScreen()),
+                  MaterialPageRoute(builder: (context) => const VoiceActivationPage()),
                 ),
               ),
               const Spacer(),

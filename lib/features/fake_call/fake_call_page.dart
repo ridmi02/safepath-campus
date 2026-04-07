@@ -283,7 +283,7 @@ class _FakeCallPageState extends State<FakeCallPage> {
                   Slider(
                     min: 1,
                     max: 30,
-                    value: _delayMinutes.toDouble(),
+                    value: _delayMinutes.toDouble(), // Note: value is still correct for Slider
                     divisions: 29,
                     label: '$_delayMinutes min',
                     onChanged: (value) =>

@@ -1,0 +1,61 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- Voice activation: events (SOS / panic) + per-user panic word doc ---
+    match /voice_activation_events/{eventId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if false;
+    }
+
+    match /voice_activation/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // --- Incidents (single rule; you had two matches for the same path — keep one) ---
+    match /incidents/{doc} {
+      allow read, write: if true;
+    }
+
+    match /Users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /notifications/{notificationId} {
+      allow create: if request.auth != null;
+      allow read: if false;
+    }
+
+    match /companion_rooms/{roomId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.hostUid == request.auth.uid;
+      allow update, delete: if request.auth != null;
+
+      match /host_ice/{iceId} {
+        allow read, write: if request.auth != null;
+      }
+      match /guest_ice/{iceId} {
+        allow read, write: if request.auth != null;
+      }
+    }
+
+    match /companion_requests/{requestId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.hostUid == request.auth.uid
+        && request.resource.data.status == 'open';
+      allow update, delete: if request.auth != null;
+    }
+
+    match /sos_logs/{logId} {
+      allow create: if request.auth != null;
+      allow read: if false;
+    }
+  }
+}

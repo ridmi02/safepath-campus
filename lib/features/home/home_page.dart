@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:safepath_campus/screens/emergency_screen.dart';
 import 'package:safepath_campus/services/firebase_service.dart';
-import 'package:safepath_campus/voice_activation_page.dart';
+import 'package:safepath_campus/services/voice_activation_page.dart';
+import 'package:safepath_campus/services/emergency_alarm_service.dart';
 
 class MyHomePage extends StatelessWidget {
   const MyHomePage({super.key});
   static const double _featureTileHeight = 132;
 
   void _triggerSOS(BuildContext context) {
+    EmergencyAlertService().activateEmergency();
     const FirebaseService().logSosActivated();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -21,13 +23,8 @@ class MyHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final int scaffoldBgVal =
-        Theme.of(context).scaffoldBackgroundColor.toARGB32();
-    final int scaffoldR = (scaffoldBgVal >> 16) & 0xFF;
-    final int scaffoldG = (scaffoldBgVal >> 8) & 0xFF;
-    final int scaffoldB = scaffoldBgVal & 0xFF;
     final Color heroTint =
-        Color.fromARGB((0.06 * 255).round(), scaffoldR, scaffoldG, scaffoldB);
+        Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.06);
 
     return Scaffold(
       appBar: AppBar(
