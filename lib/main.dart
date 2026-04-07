@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'services/app_theme.dart';
 import 'services/notification_service.dart';
-import 'features/home/splash_screen.dart';
 import 'features/home/home_page.dart';
 import 'features/settings/data_sharing_policy_page.dart';
 import 'features/settings/settings_page.dart';
@@ -63,8 +62,7 @@ class MyApp extends StatelessWidget {
           darkTheme: AppTheme.darkTheme,
           themeMode: themeProvider.themeMode,
           debugShowCheckedModeBanner: false,
-          // Show branded splash first, then navigate to home.
-          home: const SplashScreen(),
+          home: const MyHomePage(),
           routes: {
             '/home': (context) => const MyHomePage(),
             '/campus_map': (context) => const CampusMapPage(),
