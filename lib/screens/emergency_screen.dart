@@ -3,6 +3,7 @@ import 'package:telephony/telephony.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_vibrate/flutter_vibrate.dart';
 import 'dart:ui';
+import 'package:permission_handler/permission_handler.dart';
 import '../services/emergency_alarm_service.dart';
 import '../services/app_theme.dart';
 import 'emergency_active_page.dart';
@@ -16,7 +17,7 @@ class EmergencyScreen extends StatefulWidget {
 
 class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProviderStateMixin {
   final EmergencyAlertService _alertService = EmergencyAlertService();
-  
+
   bool _isAlertActive = false;
   List<Map<String, dynamic>> _emergencyContacts = [];
   int _countdownSeconds = 0;
@@ -103,10 +104,27 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
   }
 
   Future<void> _checkPermissions() async {
-    final Telephony telephony = Telephony.instance;
-    bool? permissionsGranted = await telephony.requestPhoneAndSmsPermissions;
-    if (permissionsGranted != true) {
-      debugPrint("SMS permissions not granted");
+    // Requesting critical permissions early ensures background services function.
+    // SMS is needed for Telephony, Location for GPS coordinates, 
+    // and Notification for the Foreground Service.
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.sms,
+      Permission.location,
+      Permission.notification,
+    ].request();
+
+    // Also trigger Telephony's internal permission requester 
+    // to ensure the plugin state is ready.
+    await Telephony.instance.requestPhoneAndSmsPermissions;
+
+    if (statuses[Permission.sms]?.isDenied ?? false) {
+      debugPrint("SMS permission denied");
+    }
+    if (statuses[Permission.location]?.isDenied ?? false) {
+      debugPrint("Location permission denied");
+    }
+    if (statuses[Permission.notification]?.isDenied ?? false) {
+      debugPrint("Notification permission denied");
     }
   }
 
@@ -206,6 +224,9 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
       _showSosCountdown = false;
     });
 
+    // Trigger the actual SOS alerts (SMS and Firestore)
+    await _alertService.activateEmergency();
+
     if (!mounted) return;
     Navigator.of(context).pushNamed(
       '/emergency_active',
@@ -284,18 +305,18 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
         ],
       ),
       child: Card(
-        color: color,
+      color: color,
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        child: InkWell(
-          onTap: onTap,
+      child: InkWell(
+        onTap: onTap,
           borderRadius: BorderRadius.circular(18),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 32, color: textColor),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 32, color: textColor),
                 const SizedBox(height: 10),
                 Text(
                   label,
@@ -418,31 +439,67 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
   }
 
   Widget _buildContactsNavCard() {
-    final theme = Theme.of(context);
+    final primaryColor = Theme.of(context).colorScheme.primary;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Emergency contacts',
-          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 10),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: () => Navigator.of(context).pushNamed('/emergency_contacts'),
-            icon: const Icon(Icons.person_add_alt_1_rounded),
-            label: Text(
-              _emergencyContacts.isEmpty
-                  ? 'Add emergency contacts'
-                  : 'Manage emergency contacts (${_emergencyContacts.length})',
+        InkWell(
+          onTap: () => Navigator.of(context).pushNamed('/emergency_contacts'),
+          borderRadius: BorderRadius.circular(24),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: primaryColor.withValues(alpha: 0.1)),
             ),
-            style: ElevatedButton.styleFrom(
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
+            child: Row(
+              children: [
+                if (_emergencyContacts.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: primaryColor.withValues(alpha: 0.1), shape: BoxShape.circle),
+                    child: Icon(Icons.people_outline, color: primaryColor),
+                  )
+                else
+                  SizedBox(
+                    width: 100,
+                    height: 40,
+                    child: Stack(
+                      children: List.generate(_emergencyContacts.length > 3 ? 3 : _emergencyContacts.length, (i) {
+                        final name = _emergencyContacts[i]['name'] ?? '?';
+                        return Positioned(
+                          left: i * 25,
+                          child: CircleAvatar(
+                            radius: 20,
+                            backgroundColor: primaryColor.withValues(alpha: 0.8),
+                            child: Text(name[0].toUpperCase(), style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _emergencyContacts.isEmpty ? 'Add emergency contacts' : 'Manage Contacts',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      Text('${_emergencyContacts.length} people will be alerted', style: const TextStyle(color: Colors.black54, fontSize: 12)),
+                    ],
+                  ),
+                ),
+                Icon(Icons.arrow_forward_ios, size: 16, color: primaryColor.withValues(alpha: 0.5)),
+              ],
             ),
           ),
         ),
@@ -604,7 +661,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
         _isAlertActive ? AppTheme.warningRed.withValues(alpha: 0.1) : const Color(0xFFE8F5E9);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
+      backgroundColor: const Color(0xFFF3E5F5),
       appBar: AppBar(
         title: const Text('Emergency Alert System'),
         centerTitle: true,
@@ -613,17 +670,17 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
       body: Stack(
         children: [
           SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 width: double.infinity,
                 margin: const EdgeInsets.only(bottom: 20),
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
                   gradient: LinearGradient(
                     colors: _isAlertActive
                         ? const [Color(0xFFFFE2E2), Color(0xFFFFF1F1)]
@@ -639,9 +696,9 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
                       offset: const Offset(0, 8),
                     ),
                   ],
-                ),
-                child: Row(
-                  children: [
+                  ),
+                  child: Row(
+                    children: [
                     CircleAvatar(
                       radius: 20,
                       backgroundColor: statusBg,
@@ -655,9 +712,9 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                      Text(
                             _isAlertActive ? 'Emergency Active' : 'System Ready',
-                            style: TextStyle(
+                        style: TextStyle(
                               color: statusColor,
                               fontWeight: FontWeight.w800,
                               fontSize: 16,
@@ -669,9 +726,9 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
                             style: const TextStyle(fontSize: 12, color: Colors.black54),
                           ),
                         ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
                 ),
               ),
 
