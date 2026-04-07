@@ -21,8 +21,6 @@ class _MyHomePageState extends State<MyHomePage>
   static const double _cardRadius = 12;
 
   late final AnimationController _entranceController;
-  late final Animation<double> _heroOpacity;
-  late final Animation<Offset> _heroSlide;
   late final Animation<double> _sosOpacity;
   late final Animation<Offset> _sosSlide;
   late final Animation<double> _row1Opacity;
@@ -44,13 +42,6 @@ class _MyHomePageState extends State<MyHomePage>
         curve: Interval(begin, end, curve: Curves.easeOutCubic),
       );
     }
-
-    final heroAnim = interval(0.0, 0.38);
-    _heroOpacity = Tween<double>(begin: 0, end: 1).animate(heroAnim);
-    _heroSlide = Tween<Offset>(
-      begin: const Offset(0, 0.08),
-      end: Offset.zero,
-    ).animate(heroAnim);
 
     final sosAnim = interval(0.12, 0.52);
     _sosOpacity = Tween<double>(begin: 0, end: 1).animate(sosAnim);
@@ -99,8 +90,6 @@ class _MyHomePageState extends State<MyHomePage>
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final Color heroTint =
-        Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.06);
 
     return Scaffold(
       appBar: AppBar(
@@ -132,80 +121,6 @@ class _MyHomePageState extends State<MyHomePage>
                 parent: AlwaysScrollableScrollPhysics(),
               ),
               slivers: [
-                // ── Hero banner ─────────────────────────────────────────────
-                SliverToBoxAdapter(
-                  child: FadeTransition(
-                    opacity: _heroOpacity,
-                    child: SlideTransition(
-                      position: _heroSlide,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(_cardRadius),
-                        child: Stack(
-                          clipBehavior: Clip.hardEdge,
-                          children: [
-                            Container(
-                              height: 120,
-                              decoration: BoxDecoration(
-                                color: heroTint,
-                                borderRadius:
-                                    BorderRadius.circular(_cardRadius),
-                                border: Border.all(
-                                  color: colorScheme.outline
-                                      .withValues(alpha: 0.12),
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              right: -36,
-                              top: -28,
-                              child: _DecorCircle(
-                                diameter: 112,
-                                color: colorScheme.primary
-                                    .withValues(alpha: 0.08),
-                              ),
-                            ),
-                            Positioned(
-                              left: -24,
-                              bottom: -20,
-                              child: _DecorCircle(
-                                diameter: 88,
-                                color: colorScheme.outline
-                                    .withValues(alpha: 0.1),
-                              ),
-                            ),
-                            Positioned.fill(
-                              child: CustomPaint(
-                                painter: _HeroStripesPainter(
-                                  color: colorScheme.outline
-                                      .withValues(alpha: 0.06),
-                                ),
-                              ),
-                            ),
-                            SizedBox(
-                              height: 120,
-                              child: Center(
-                                child: Text(
-                                  'SafePath',
-                                  style: TextStyle(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.bold,
-                                    height: 1.1,
-                                    letterSpacing: -0.5,
-                                    color: colorScheme.primary,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SliverToBoxAdapter(
-                    child: SizedBox(height: _sectionSpacing)),
-
                 // ── SOS button ───────────────────────────────────────────────
                 SliverToBoxAdapter(
                   child: FadeTransition(

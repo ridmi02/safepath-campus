@@ -1391,6 +1391,7 @@ class _CampusMapPageState extends State<CampusMapPage> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Campus Map')),
+      backgroundColor: const Color(0xFF0D1B2A), // Always use dark background for map
       body: Stack(
         children: [
           FlutterMap(

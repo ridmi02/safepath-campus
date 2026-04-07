@@ -177,27 +177,27 @@ class _MyAppState extends State<MyApp> {
     final lightTheme = ThemeData(
       colorScheme: lightScheme,
       useMaterial3: true,
-      scaffoldBackgroundColor: backgroundColor,
+      scaffoldBackgroundColor: Colors.white, // Light background for light mode
       iconTheme: const IconThemeData(color: primaryIconColor),
       primaryIconTheme: const IconThemeData(color: primaryIconColor),
       textTheme: const TextTheme(
         titleLarge: TextStyle(
-            color: titleTextColor,
+            color: Colors.black87, // Dark text for light background
             fontSize: 20,
             fontWeight: FontWeight.w600),
-        bodyMedium: TextStyle(color: bodyTextColor),
+        bodyMedium: TextStyle(color: Colors.black87), // Dark text for light background
       ),
       disabledColor: disabledColorVal,
       appBarTheme: AppBarTheme(
         backgroundColor: lightScheme.primary,
-        foregroundColor: titleTextColor,
+        foregroundColor: Colors.white, // White text on colored app bar
       ),
     );
 
     final darkTheme = ThemeData(
       colorScheme: darkScheme,
       useMaterial3: true,
-      scaffoldBackgroundColor: backgroundColor,
+      scaffoldBackgroundColor: backgroundColor, // Keep existing dark background
       iconTheme: const IconThemeData(color: primaryIconColor),
       primaryIconTheme: const IconThemeData(color: primaryIconColor),
       textTheme: const TextTheme(
