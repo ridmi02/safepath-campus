@@ -50,6 +50,7 @@ dependencies:
 
   # Config
   flutter_dotenv: ^6.0.0
+  flutter_webrtc: ^1.4.1
 
 dev_dependencies:
   flutter_test:
