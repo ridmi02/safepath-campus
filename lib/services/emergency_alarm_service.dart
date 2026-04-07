@@ -386,9 +386,7 @@ class EmergencyAlertService {
           ),
         );
         
-        if (position != null) {
-          locationString = 'https://www.google.com/maps/search/?api=1&query=${position.latitude},${position.longitude}';
-        }
+        locationString = 'https://www.google.com/maps/search/?api=1&query=${position.latitude},${position.longitude}';
       } catch (e) {
         debugPrint('Error getting location for alert: $e');
       }

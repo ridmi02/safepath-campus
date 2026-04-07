@@ -506,7 +506,7 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
               sliver: SliverList.separated(
                 itemCount: filtered.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                separatorBuilder: (_, _) => const SizedBox(height: 12),
                 itemBuilder: (context, i) {
                   final c = filtered[i];
                   final name = (c['name'] ?? 'Unknown').toString();

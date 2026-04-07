@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -37,7 +36,6 @@ class _VoiceActivationPageState extends State<VoiceActivationPage> with TickerPr
   late AnimationController _rippleController;
   bool _isTriggered = false;
   int _countdown = 5;
-  int _initialCountdown = 5;
   Timer? _countdownTimer;
   double _micButtonScale = 1.0;
 
@@ -165,7 +163,6 @@ class _VoiceActivationPageState extends State<VoiceActivationPage> with TickerPr
     final startValue = await _alertService.getSosCountdown();
     setState(() {
       _isTriggered = true;
-      _initialCountdown = startValue;
       _countdown = startValue;
     });
 
@@ -608,7 +605,7 @@ class _VoiceActivationPageState extends State<VoiceActivationPage> with TickerPr
       title: Text(title, style: const TextStyle(fontSize: 14)),
       value: value,
       onChanged: onChanged,
-      activeColor: Theme.of(context).colorScheme.primary,
+      activeThumbColor: Theme.of(context).colorScheme.primary,
       contentPadding: EdgeInsets.zero,
     );
   }
