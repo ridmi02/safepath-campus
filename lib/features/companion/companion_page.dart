@@ -1,4 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
+
+import 'companion_call_page.dart';
+import 'companion_room_service.dart';
 
 class CompanionPage extends StatefulWidget {
   const CompanionPage({super.key});
@@ -8,354 +14,424 @@ class CompanionPage extends StatefulWidget {
 }
 
 class _CompanionPageState extends State<CompanionPage> {
-  final List<_CompanionStudent> _companions = const [
-    _CompanionStudent(
-      name: 'Alex Perera',
-      role: 'Peer Escort',
-      email: 'it22100123@sliit.lk',
-      initials: 'AP',
-      avatarColor: Color(0xFF3A86FF),
-    ),
-    _CompanionStudent(
-      name: 'Jordan Silva',
-      role: 'Campus Safety',
-      email: 'it22100456@sliit.lk',
-      initials: 'JS',
-      avatarColor: Color(0xFF2ECC71),
-    ),
-    _CompanionStudent(
-      name: 'Taylor Fernando',
-      role: 'Resident Advisor',
-      email: 'it22100789@sliit.lk',
-      initials: 'TF',
-      avatarColor: Color(0xFF9B5DE5),
-    ),
-    _CompanionStudent(
-      name: 'Nethmi Jayasuriya',
-      role: 'Senior Student Mentor',
-      email: 'it22100812@sliit.lk',
-      initials: 'NJ',
-      avatarColor: Color(0xFFF4D35E),
-    ),
-    _CompanionStudent(
-      name: 'Kavindu Wickramage',
-      role: 'Peer Escort',
-      email: 'it22100914@sliit.lk',
-      initials: 'KW',
-      avatarColor: Color(0xFFFF6B6B),
-    ),
-    _CompanionStudent(
-      name: 'Senuja Ranasinghe',
-      role: 'Tech Club Volunteer',
-      email: 'it22101031@sliit.lk',
-      initials: 'SR',
-      avatarColor: Color(0xFF4CC9F0),
-    ),
-  ];
+  final TextEditingController _joinCodeController = TextEditingController();
 
-  _CompanionStudent? _selectedCompanion;
-  bool _requestInProgress = false;
-  bool _isOnCall = false;
+  bool _creatingRoom = false;
+  bool _joining = false;
+  bool _showCodeJoin = false;
 
   @override
   void dispose() {
+    _joinCodeController.dispose();
     super.dispose();
   }
 
-  Future<void> _requestCompanion() async {
-    if (_selectedCompanion == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please choose a Companion first'),
+  void _showAuthConfigurationDialog() {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Fix Firebase Auth (CONFIGURATION_NOT_FOUND)'),
+        content: const SingleChildScrollView(
+          child: Text(CompanionRoomService.authConfigurationHelp),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<bool> _ensureMediaPermissions() async {
+    final cam = await Permission.camera.request();
+    final mic = await Permission.microphone.request();
+    if (!cam.isGranted || !mic.isGranted) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Camera and microphone access are required for the video walk.'),
+          ),
+        );
+      }
+      return false;
+    }
+    return true;
+  }
+
+  Future<void> _startWalk() async {
+    if (!await _ensureMediaPermissions()) return;
+    if (!mounted) return;
+
+    setState(() => _creatingRoom = true);
+    try {
+      final code = await CompanionRoomService.createWalkRoom();
+      if (!mounted) return;
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          builder: (context) => CompanionCallPage(roomId: code, isHost: true),
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        if (CompanionRoomService.isAuthConfigurationMissing(e)) {
+          _showAuthConfigurationDialog();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Sign-in failed: ${e.message ?? e.code}')),
+          );
+        }
+      }
+    } on FirebaseException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_firestoreMessage('create room', e))),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not create room: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _creatingRoom = false);
+    }
+  }
+
+  Future<void> _answerOpenRequest(String roomCode) async {
+    final claim = await CompanionRoomService.tryClaimOpenRequest(roomCode);
+    if (!mounted) return;
+
+    switch (claim) {
+      case CompanionClaimResult.notFound:
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('That request is no longer available.')),
+        );
+        return;
+      case CompanionClaimResult.taken:
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Someone else already joined this walk.')),
+        );
+        return;
+      case CompanionClaimResult.ownRequest:
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('That is your own walk request.')),
+        );
+        return;
+      case CompanionClaimResult.ok:
+        break;
+    }
+
+    final check = await CompanionRoomService.checkJoinable(roomCode);
+    if (!mounted) return;
+    switch (check) {
+      case CompanionJoinCheck.notFound:
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Room was removed. Try another request.')),
+        );
+        return;
+      case CompanionJoinCheck.alreadyEnded:
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('That walk has already ended.')),
+        );
+        return;
+      case CompanionJoinCheck.ok:
+        break;
+    }
+
+    if (!await _ensureMediaPermissions()) return;
+    if (!mounted) return;
+
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (context) => CompanionCallPage(roomId: roomCode, isHost: false),
+      ),
+    );
+  }
+
+  Future<void> _joinWalk() async {
+    final raw = _joinCodeController.text.trim();
+    if (raw.length < 4) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter the 6-character room code.')),
       );
       return;
     }
 
-    setState(() {
-      _requestInProgress = true;
-    });
-
-    await Future.delayed(const Duration(seconds: 2));
-
+    final code = raw.toUpperCase();
+    if (!await _ensureMediaPermissions()) return;
     if (!mounted) return;
-    setState(() {
-      _requestInProgress = false;
-      _isOnCall = true;
-    });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Companion connected (demo mode)'),
-      ),
-    );
-  }
+    setState(() => _joining = true);
+    try {
+      final check = await CompanionRoomService.checkJoinable(code);
+      if (!mounted) return;
+      switch (check) {
+        case CompanionJoinCheck.notFound:
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No walk found with that code. Check and try again.')),
+          );
+          return;
+        case CompanionJoinCheck.alreadyEnded:
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('That walk has already ended. Ask for a new code.')),
+          );
+          return;
+        case CompanionJoinCheck.ok:
+          break;
+      }
 
-  void _endWalk() {
-    setState(() {
-      _isOnCall = false;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Walk completed — stay safe!'),
-      ),
-    );
-    Navigator.of(context).pop();
+      final claim = await CompanionRoomService.tryClaimOpenRequest(code);
+      if (!mounted) return;
+      if (claim == CompanionClaimResult.ownRequest) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('You started this walk — stay on the host screen.')),
+        );
+        return;
+      }
+      if (claim == CompanionClaimResult.taken) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Another companion already joined. Ask for a new walk if needed.'),
+          ),
+        );
+        return;
+      }
+
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          builder: (context) => CompanionCallPage(roomId: code, isHost: false),
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        if (CompanionRoomService.isAuthConfigurationMissing(e)) {
+          _showAuthConfigurationDialog();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Sign-in failed: ${e.message ?? e.code}')),
+          );
+        }
+      }
+    } on FirebaseException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_firestoreMessage('join walk', e))),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not join: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _joining = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final myUid = FirebaseAuth.instance.currentUser?.uid;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('The Companion'),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.groups_2,
-                          size: 32,
-                          color: colorScheme.secondary,
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'The Companion',
-                          style: theme.textTheme.titleLarge,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Request a verified student to stay with you '
-                      'on an audio/video call until you reach your door.',
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'This prototype focuses on the safety flow only. '
-                      'In a full release, the call itself would run over '
-                      'secure real-time audio/video.',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.disabledColor,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Expanded(
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  DropdownButtonFormField<_CompanionStudent>(
-                    initialValue: _selectedCompanion,
-                    isExpanded: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Choose a Companion',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: _companions
-                        .map(
-                          (c) => DropdownMenuItem<_CompanionStudent>(
-                            value: c,
-                            child: Row(
-                              children: [
-                                CircleAvatar(
-                                  radius: 12,
-                                  backgroundColor: c.avatarColor,
-                                  child: Text(
-                                    c.initials,
-                                    style: const TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Flexible(
-                                  child: Text(
-                                    '${c.name} (${c.role})',
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: _isOnCall
-                        ? null
-                        : (value) {
-                            setState(() {
-                              _selectedCompanion = value;
-                            });
-                          },
+                  Row(
+                    children: [
+                      Icon(Icons.groups_2, size: 32, color: colorScheme.secondary),
+                      const SizedBox(width: 12),
+                      Text('The Companion', style: theme.textTheme.titleLarge),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  if (_selectedCompanion != null)
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primaryContainer.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: colorScheme.primary.withValues(alpha: 0.35),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 24,
-                            backgroundColor: _selectedCompanion!.avatarColor,
-                            child: Text(
-                              _selectedCompanion!.initials,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _selectedCompanion!.name,
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                Text(_selectedCompanion!.role),
-                                Text(
-                                  _selectedCompanion!.email,
-                                  style: theme.textTheme.bodySmall,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  if (_selectedCompanion != null) const SizedBox(height: 12),
-                  if (_isOnCall)
-                    ElevatedButton.icon(
-                      onPressed: _endWalk,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.redAccent,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      icon: const Icon(Icons.call_end),
-                      label: const Text('End Walk'),
-                    )
-                  else
-                    ElevatedButton.icon(
-                      onPressed:
-                          _requestInProgress ? null : _requestCompanion,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      icon: _requestInProgress
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.directions_walk),
-                      label: Text(
-                        _requestInProgress
-                            ? 'Finding a Companion...'
-                            : 'Request Virtual Walk-Home',
-                      ),
-                    ),
-                  const SizedBox(height: 14),
-                  if (_isOnCall)
-                    Container(
-                      padding: const EdgeInsets.all(16.0),
-                      decoration: BoxDecoration(
-                        color: Colors.green.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.green.withValues(alpha: 0.6),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.shield_moon,
-                                  color: Colors.green),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Walk in progress',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'You are on a call with '
-                            '${_selectedCompanion?.name ?? 'your Companion'} '
-                            'until you safely reach your door.',
-                            style: theme.textTheme.bodyMedium,
-                          ),
-                        ],
-                      ),
-                    )
-                  else
-                    Text(
-                      'Your Companion will stay on the line, watch for '
-                      'anything unusual, and can escalate to campus safety '
-                      'if needed.',
-                      style: theme.textTheme.bodyMedium,
-                    ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'One student requests a virtual walk-home. Another verified student can answer '
+                    'from the list below or join with the room code. Video uses WebRTC; signaling uses Firebase.',
+                    style: theme.textTheme.bodyMedium,
+                  ),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'I need a companion',
+            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Your walk is published so helpers can see it. You still get a room code to share if you prefer.',
+            style: theme.textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            onPressed: _creatingRoom ? null : _startWalk,
+            icon: _creatingRoom
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.directions_walk),
+            label: Text(_creatingRoom ? 'Starting…' : 'Request virtual walk-home'),
+          ),
+          const SizedBox(height: 32),
+          Text(
+            'I can help — open requests',
+            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Tap Answer on a request to join as their companion. First tap wins.',
+            style: theme.textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 12),
+          StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            stream: CompanionRoomService.openWalkRequestsStream(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (snapshot.hasError) {
+                return Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      'Could not load requests. Check Firestore rules and your connection.\n${snapshot.error}',
+                      style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.error),
+                    ),
+                  ),
+                );
+              }
+
+              final docs = snapshot.data?.docs ?? [];
+              final filtered = docs.where((d) {
+                final host = d.data()['hostUid'] as String?;
+                if (myUid != null && host == myUid) return false;
+                return true;
+              }).toList()
+                ..sort((a, b) {
+                  final ta = a.data()['createdAt'];
+                  final tb = b.data()['createdAt'];
+                  if (ta is Timestamp && tb is Timestamp) {
+                    return tb.compareTo(ta);
+                  }
+                  return 0;
+                });
+
+              if (filtered.isEmpty) {
+                return Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      'No open walk requests right now. Pull to refresh is automatic — try again soon.',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ),
+                );
+              }
+
+              return Column(
+                children: filtered.map((doc) {
+                  final data = doc.data();
+                  final code = (data['roomCode'] as String? ?? doc.id).toUpperCase();
+                  final created = data['createdAt'];
+                  final subtitle = created is Timestamp
+                      ? _relativeTime(created.toDate())
+                      : 'Just now';
+
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: colorScheme.primaryContainer,
+                        child: Icon(Icons.person_search, color: colorScheme.onPrimaryContainer),
+                      ),
+                      title: const Text('Walk request'),
+                      subtitle: Text('$code · $subtitle'),
+                      trailing: FilledButton(
+                        onPressed: () => _answerOpenRequest(code),
+                        child: const Text('Answer'),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              );
+            },
+          ),
+          const SizedBox(height: 24),
+          ExpansionTile(
+            initiallyExpanded: _showCodeJoin,
+            onExpansionChanged: (v) => setState(() => _showCodeJoin = v),
+            title: Text(
+              'Join with room code',
+              style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            subtitle: const Text('If you already have a code from the walker'),
+            children: [
+              TextField(
+                controller: _joinCodeController,
+                textCapitalization: TextCapitalization.characters,
+                decoration: const InputDecoration(
+                  labelText: 'Room code',
+                  hintText: 'e.g. AB3K9Z',
+                  border: OutlineInputBorder(),
+                ),
+                maxLength: 8,
+              ),
+              const SizedBox(height: 8),
+              FilledButton.tonalIcon(
+                onPressed: _joining ? null : _joinWalk,
+                icon: _joining
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.video_call),
+                label: Text(_joining ? 'Joining…' : 'Join video walk'),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ],
       ),
     );
   }
+
+  static String _relativeTime(DateTime t) {
+    final diff = DateTime.now().difference(t);
+    if (diff.inSeconds < 60) return 'Moments ago';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
+    if (diff.inHours < 24) return '${diff.inHours} h ago';
+    return '${diff.inDays} d ago';
+  }
+
+  static String _firestoreMessage(String action, FirebaseException e) {
+    if (e.code == 'permission-denied') {
+      return 'Permission denied ($action). Check Firestore rules and that sign-in is enabled.';
+    }
+    return 'Could not $action: ${e.message ?? e.code}';
+  }
 }
-
-class _CompanionStudent {
-  const _CompanionStudent({
-    required this.name,
-    required this.role,
-    required this.email,
-    required this.initials,
-    required this.avatarColor,
-  });
-
-  final String name;
-  final String role;
-  final String email;
-  final String initials;
-  final Color avatarColor;
-}
-
