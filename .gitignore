@@ -117,3 +117,16 @@ app.*.symbols
 !**/ios/**/default.perspectivev3
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 !/dev/ci/**/Gemfile.lock
+
+# IDE
+.vscode/
+
+# Log and analysis files
+adb_log.txt
+analysis_output.txt
+analysis_results.txt
+final_analysis.txt
+package_log.txt
+
+# Environment
+.env

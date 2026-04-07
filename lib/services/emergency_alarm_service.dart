@@ -10,7 +10,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:telephony/telephony.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'notification_service.dart';
 import 'voice_activation_firestore_service.dart';
 import '../firebase_options.dart';
@@ -393,30 +393,18 @@ class EmergencyAlertService {
         debugPrint('Error getting location for alert: $e');
       }
 
-      // Send Direct SMS to each contact
+      // Send SMS to each contact via system SMS app (url_launcher)
       final customMsg = await getCustomSosMessage();
-      String messageBody = "$customMsg My location: $locationString";
-      
-      final Telephony telephony = Telephony.instance;
-      
-      // Ensure the plugin itself registers the permission state
-      bool? permissionsGranted = await telephony.requestPhoneAndSmsPermissions;
-      if (permissionsGranted != true) {
-        debugPrint("Telephony: SMS permissions not fully acknowledged by plugin");
-      }
+      final String messageBody = "$customMsg My location: $locationString";
 
       for (String phone in phoneNumbers) {
         try {
-          // Robust number cleaning: Keep only digits and the leading '+'
-          final String cleanPhone = phone.replaceAll(RegExp(r'[^\d+]'), '');
-          if (cleanPhone.isEmpty) continue;
-
-          await telephony.sendSms(
-            to: cleanPhone,
-            message: messageBody,
-            statusListener: (SendStatus status) => debugPrint("SMS status for $cleanPhone: $status"),
-          );
-          debugPrint('SMS command dispatched to Telephony for $cleanPhone');
+          final uri = Uri.parse('sms:$phone?body=${Uri.encodeComponent(messageBody)}');
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri);
+          } else {
+            debugPrint("Cannot launch SMS URI for $phone");
+          }
         } catch (e) {
           debugPrint("Error sending SMS to $phone: $e");
         }
