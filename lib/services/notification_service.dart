@@ -47,10 +47,10 @@ class NotificationService {
       final userId = _auth.currentUser?.uid;
       if (userId == null) return;
 
-      await _firestore.collection('users').doc(userId).update({
+      await _firestore.collection('Users').doc(userId).set({
         'fcmToken': token,
         'tokenUpdatedAt': FieldValue.serverTimestamp(),
-      });
+      }, SetOptions(merge: true));
     } catch (e) {
       debugPrint('Error saving user token: $e');
     }
@@ -69,9 +69,11 @@ class NotificationService {
     required String userLocation,
   }) async {
     try {
+      final userId = _auth.currentUser?.uid;
       // Call a Firebase Cloud Function that handles SMS and push notifications
       await _firestore.collection('notifications').add({
         'type': 'emergency',
+        'senderId': userId,
         'recipientPhones': phoneNumbers,
         'senderName': userName,
         'userLocation': userLocation,
