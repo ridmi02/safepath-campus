@@ -78,7 +78,7 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
       }
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
-        print("=== DEADMAN: Location permission denied ===");
+        debugPrint("=== DEADMAN: Location permission denied ===");
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -99,15 +99,16 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
         _updateLocation();
       });
     } catch (e) {
-      print("=== DEADMAN: Location error: $e ===");
+      debugPrint("=== DEADMAN: Location error: $e ===");
     }
   }
 
   Future<void> _updateLocation() async {
     try {
-      // geolocator 9.x API uses desiredAccuracy parameter
       final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
       );
       setState(() {
         _currentLat = position.latitude;
@@ -118,10 +119,11 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
         position.latitude,
         position.longitude,
       );
-      print(
-          "=== DEADMAN: Location updated: ${position.latitude}, ${position.longitude} ===");
+      debugPrint(
+        "=== DEADMAN: Location updated: ${position.latitude}, ${position.longitude} ===",
+      );
     } catch (e) {
-      print("=== DEADMAN: Location update failed: $e ===");
+      debugPrint("=== DEADMAN: Location update failed: $e ===");
     }
   }
 
@@ -212,8 +214,8 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => WillPopScope(
-        onWillPop: () async => false,
+      builder: (context) => PopScope(
+        canPop: false,
         child: AlertDialog(
           backgroundColor: Colors.orange.shade50,
           title: const Row(
@@ -305,8 +307,9 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
         contactNotified: true,
       ));
 
-      print(
-          "=== DEADMAN: ALERT TRIGGERED! Location: $_currentLat, $_currentLng ===");
+      debugPrint(
+        "=== DEADMAN: ALERT TRIGGERED! Location: $_currentLat, $_currentLng ===",
+      );
 
       if (!mounted) return;
 
@@ -320,7 +323,7 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
             builder: (_) => AlertSentScreen(trip: updatedTrip)),
       );
     } catch (e) {
-      print("=== DEADMAN: Alert trigger error: $e ===");
+      debugPrint("=== DEADMAN: Alert trigger error: $e ===");
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -352,10 +355,10 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
     try {
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri);
-        print("=== DEADMAN: SMS app opened automatically ===");
+        debugPrint("=== DEADMAN: SMS app opened automatically ===");
       }
     } catch (e) {
-      print("=== DEADMAN: Auto SMS error: $e ===");
+      debugPrint("=== DEADMAN: Auto SMS error: $e ===");
     }
   }
 
@@ -373,13 +376,14 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context);
+              final navigator = Navigator.of(context);
+              navigator.pop();
               _countdownTimer?.cancel();
               _locationTimer?.cancel();
               await DeadmanService()
                   .updateTripStatus(_currentTrip.tripId, 'cancelled');
               if (!mounted) return;
-              Navigator.of(context).popUntil((route) => route.isFirst);
+              navigator.popUntil((route) => route.isFirst);
             },
             child: const Text("Yes, Cancel",
                 style: TextStyle(color: Colors.red)),
@@ -563,7 +567,7 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.05),
+                color: Colors.red.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Row(

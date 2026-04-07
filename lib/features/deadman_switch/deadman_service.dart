@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../../models/trip_model.dart';
 import '../../models/sos_log_model.dart';
 
@@ -20,7 +21,7 @@ class DeadmanService {
       emergencyContactPhone: trip.emergencyContactPhone,
     );
     await docRef.set(tripWithId.toMap());
-    print("=== DEADMAN: Trip created with ID: ${docRef.id} ===");
+    debugPrint("=== DEADMAN: Trip created with ID: ${docRef.id} ===");
     return tripWithId;
   }
 
@@ -29,7 +30,7 @@ class DeadmanService {
     await _firestore.collection('trips').doc(tripId).update({
       'status': status,
     });
-    print("=== DEADMAN: Trip $tripId status updated to $status ===");
+    debugPrint("=== DEADMAN: Trip $tripId status updated to $status ===");
   }
 
   // Update last known location
@@ -52,7 +53,7 @@ class DeadmanService {
       await _firestore.collection('trips').doc(tripId).update({
         'expectedArrivalTime': Timestamp.fromDate(newArrival),
       });
-      print("=== DEADMAN: Trip extended by $additionalMinutes minutes ===");
+      debugPrint("=== DEADMAN: Trip extended by $additionalMinutes minutes ===");
     }
   }
 
@@ -63,7 +64,7 @@ class DeadmanService {
       'alertSentAt': Timestamp.fromDate(DateTime.now()),
       'status': 'alert_triggered',
     });
-    print("=== DEADMAN: Alert marked as sent for trip $tripId ===");
+    debugPrint("=== DEADMAN: Alert marked as sent for trip $tripId ===");
   }
 
   // Create SOS log entry
@@ -82,7 +83,7 @@ class DeadmanService {
       contactNotified: log.contactNotified,
     );
     await docRef.set(logWithId.toMap());
-    print("=== DEADMAN: SOS log created with ID: ${docRef.id} ===");
+    debugPrint("=== DEADMAN: SOS log created with ID: ${docRef.id} ===");
   }
 
   // Get active trip for a user
