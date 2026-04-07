@@ -14,17 +14,15 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   static const double _featureTileHeight = 132;
   static const double _sectionSpacing = 32;
   static const double _rowGap = 12;
   static const double _cardRadius = 12;
 
   late final AnimationController _entranceController;
-  late final AnimationController _sosPulseController;
   late final Animation<double> _sosOpacity;
   late final Animation<Offset> _sosSlide;
-  late final Animation<double> _sosBreathScale;
   late final Animation<double> _row1Opacity;
   late final Animation<Offset> _row1Slide;
   late final Animation<double> _row2Opacity;
@@ -37,10 +35,6 @@ class _MyHomePageState extends State<MyHomePage>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
-    _sosPulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1800),
-    );
 
     Animation<double> interval(double begin, double end) {
       return CurvedAnimation(
@@ -49,20 +43,14 @@ class _MyHomePageState extends State<MyHomePage>
       );
     }
 
-    final sosAnim = interval(0.0, 0.42);
+    final sosAnim = interval(0.12, 0.52);
     _sosOpacity = Tween<double>(begin: 0, end: 1).animate(sosAnim);
     _sosSlide = Tween<Offset>(
       begin: const Offset(0, 0.1),
       end: Offset.zero,
     ).animate(sosAnim);
-    _sosBreathScale = Tween<double>(begin: 1.0, end: 1.04).animate(
-      CurvedAnimation(
-        parent: _sosPulseController,
-        curve: Curves.easeInOut,
-      ),
-    );
 
-    final r1 = interval(0.2, 0.72);
+    final r1 = interval(0.28, 0.72);
     _row1Opacity = Tween<double>(begin: 0, end: 1).animate(r1);
     _row1Slide = Tween<Offset>(
       begin: const Offset(0, 0.06),
@@ -77,13 +65,11 @@ class _MyHomePageState extends State<MyHomePage>
     ).animate(r2);
 
     _entranceController.forward();
-    _sosPulseController.repeat(reverse: true);
   }
 
   @override
   void dispose() {
     _entranceController.dispose();
-    _sosPulseController.dispose();
     super.dispose();
   }
 
@@ -145,85 +131,39 @@ class _MyHomePageState extends State<MyHomePage>
                         child: Semantics(
                           button: true,
                           label: 'SOS Emergency',
-                          child: Column(
-                            children: [
-                              ScaleTransition(
-                                scale: _sosBreathScale,
-                                child: SizedBox(
-                                  width: 190,
-                                  height: 190,
-                                  child: Stack(
-                                    alignment: Alignment.center,
-                                    children: [
-                                      Container(
-                                        width: 190,
-                                        height: 190,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: colorScheme.primary
-                                              .withValues(alpha: 0.06),
-                                        ),
-                                      ),
-                                      Container(
-                                        width: 174,
-                                        height: 174,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: colorScheme.outline
-                                                .withValues(alpha: 0.2),
-                                          ),
-                                        ),
-                                      ),
-                                      Container(
-                                        width: 160,
-                                        height: 160,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: const Color(0xFFE63946),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: const Color(0xFFE63946)
-                                                  .withAlpha((0.4 * 255).round()),
-                                              blurRadius: 20,
-                                              spreadRadius: 2,
-                                            ),
-                                          ],
-                                        ),
-                                        child: Material(
-                                          color: Colors.transparent,
-                                          child: InkWell(
-                                            onTap: () => _triggerSOS(context),
-                                            customBorder: const CircleBorder(),
-                                            child: const Center(
-                                              child: Text(
-                                                'SOS',
-                                                style: TextStyle(
-                                                  fontSize: 52,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Color(0xFFFFFFFF),
-                                                  letterSpacing: 2,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                          child: Container(
+                            width: 160,
+                            height: 160,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: const Color(0xFFE63946),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFE63946)
+                                      .withAlpha((0.4 * 255).round()),
+                                  blurRadius: 20,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () => _triggerSOS(context),
+                                customBorder: const CircleBorder(),
+                                child: const Center(
+                                  child: Text(
+                                    'SOS',
+                                    style: TextStyle(
+                                      fontSize: 52,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFFFFFFFF),
+                                      letterSpacing: 2,
+                                    ),
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 10),
-                              Text(
-                                'Tap for immediate emergency alert',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: colorScheme.onSurface
-                                      .withValues(alpha: 0.65),
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                         ),
                       ),
@@ -245,23 +185,6 @@ class _MyHomePageState extends State<MyHomePage>
                   ),
                 ),
                 const SliverToBoxAdapter(child: SizedBox(height: 16)),
-                SliverToBoxAdapter(
-                  child: FadeTransition(
-                    opacity: _row1Opacity,
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: Text(
-                        'Quick Actions',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.2,
-                          color: colorScheme.onSurface.withValues(alpha: 0.85),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
 
                 // ── Row 1: Emergency Alert + Campus Map ──────────────────────
                 SliverToBoxAdapter(
@@ -457,7 +380,57 @@ class _HomeBackdropPainter extends CustomPainter {
       oldDelegate.colorScheme.outline != colorScheme.outline;
 }
 
+class _HeroStripesPainter extends CustomPainter {
+  _HeroStripesPainter({required this.color});
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final p = Paint()
+      ..color = color
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
+    const spacing = 18.0;
+    for (double i = -size.height; i < size.width + size.height; i += spacing) {
+      canvas.drawLine(
+        Offset(i, 0),
+        Offset(i + size.height, size.height),
+        p,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _HeroStripesPainter oldDelegate) =>
+      oldDelegate.color != color;
+}
+
 // ── Helper widgets ───────────────────────────────────────────────────────────
+
+class _DecorCircle extends StatelessWidget {
+  const _DecorCircle({
+    required this.diameter,
+    required this.color,
+  });
+
+  final double diameter;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Container(
+        width: diameter,
+        height: diameter,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: color,
+        ),
+      ),
+    );
+  }
+}
 
 class _SectionDivider extends StatelessWidget {
   const _SectionDivider({required this.colorScheme});
