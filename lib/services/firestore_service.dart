@@ -38,7 +38,11 @@ class FirestoreService {
     try {
       // ignore: avoid_print
       print("=== FIRESTORE: Fetching document for UID: $uid ===");
-      final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      var doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      if (!doc.exists || doc.data() == null) {
+        // Backward compatibility: some older data may be under `Users`.
+        doc = await FirebaseFirestore.instance.collection('Users').doc(uid).get();
+      }
       // ignore: avoid_print
       print("=== FIRESTORE: Document exists: ${doc.exists} ===");
 
@@ -50,7 +54,9 @@ class FirestoreService {
 
       // ignore: avoid_print
       print("=== FIRESTORE: Document data: ${doc.data()} ===");
-      return UserModel.fromMap(doc.data()!);
+      final data = Map<String, dynamic>.from(doc.data()!);
+      data['uid'] = (data['uid'] ?? uid).toString();
+      return UserModel.fromMap(data);
     } catch (e) {
       // ignore: avoid_print
       print("=== FIRESTORE ERROR: $e ===");
