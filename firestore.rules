@@ -17,8 +17,41 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
+    // Tightened self-profile rules:
+    // - Student edits own profile only
+    // - Student ID and uid are immutable once created
+    // - Optional admin override for update/read
     match /users/{userId} {
+      allow read: if request.auth != null
+        && (request.auth.uid == userId || _isAdmin(database));
+
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.uid == userId;
+
+      allow update: if request.auth != null
+        && (
+          // Self update with immutable identity fields
+          (request.auth.uid == userId
+            && request.resource.data.uid == resource.data.uid
+            && request.resource.data.sliitId == resource.data.sliitId)
+          // Admin update support (for verification workflows)
+          || _isAdmin(database)
+        );
+
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Optional profile image document if you later store avatar metadata separately.
+    // Example document id = uid, fields: imageUrl, updatedAt.
+    match /profile_images/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Optional account delete request queue (if you later move deletes to backend).
+    match /account_delete_requests/{userId} {
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow read, update, delete: if false;
     }
 
     match /notifications/{notificationId} {
@@ -56,6 +89,11 @@ service cloud.firestore {
     match /sos_logs/{logId} {
       allow create: if request.auth != null;
       allow read: if false;
+    }
+
+    function _isAdmin(database) {
+      return request.auth != null
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
   }
 }
