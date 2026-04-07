@@ -5,6 +5,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import 'companion_call_page.dart';
 import 'companion_room_service.dart';
+import 'companion_webrtc_ice.dart';
 
 class CompanionPage extends StatefulWidget {
   const CompanionPage({super.key});
@@ -271,6 +272,57 @@ class _CompanionPageState extends State<CompanionPage> {
               ),
             ),
           ),
+          if (!isCompanionTurnConfigured()) ...[
+            const SizedBox(height: 12),
+            Card(
+              color: colorScheme.errorContainer.withValues(alpha: 0.4),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.wifi_tethering_error_rounded, color: colorScheme.error),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'For mobile data & campus Wi‑Fi: add TURN (relay)',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'You do not need the same network: two phones on their own mobile data is fine. '
+                      'Firebase only carries call setup; video uses WebRTC. Without a TURN server, carriers and '
+                      'university firewalls usually block the video path.',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Get free TURN credentials from any WebRTC TURN provider (search “WebRTC TURN free tier”). '
+                      'Then add to your project `.env` and restart the app:',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'COMPANION_TURN_URI=turn:host:3478,turn:host:443?transport=tcp\n'
+                      'COMPANION_TURN_USERNAME=…\n'
+                      'COMPANION_TURN_CREDENTIAL=…',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontFamily: 'monospace',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 24),
           Text(
             'I need a companion',

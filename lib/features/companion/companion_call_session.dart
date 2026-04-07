@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 import 'companion_room_service.dart';
+import 'companion_webrtc_ice.dart';
 
 typedef CompanionConnectionCallback = void Function(RTCPeerConnectionState state);
 typedef CompanionErrorCallback = void Function(String message);
@@ -44,11 +45,9 @@ class CompanionCallSession {
   bool _ended = false;
 
   static Map<String, dynamic> get _rtcConfig => {
-        'iceServers': [
-          {'urls': 'stun:stun.l.google.com:19302'},
-          {'urls': 'stun:stun1.l.google.com:19302'},
-        ],
+        'iceServers': buildCompanionIceServers(),
         'sdpSemantics': 'unified-plan',
+        'iceCandidatePoolSize': 10,
       };
 
   Future<void> start() async {
@@ -77,7 +76,12 @@ class CompanionCallSession {
     _pc!.onConnectionState = (state) {
       onConnectionState?.call(state);
       if (state == RTCPeerConnectionState.RTCPeerConnectionStateFailed) {
-        onError?.call('Connection failed. Try ending the call and reconnecting.');
+        onError?.call(
+          isCompanionTurnConfigured()
+              ? 'Connection failed. Try again on a new walk or different network.'
+              : 'Connection failed. Mobile data and campus Wi‑Fi usually need TURN. '
+                  'Open The Companion screen for setup steps, then add COMPANION_TURN_* to .env.',
+        );
       }
     };
 
