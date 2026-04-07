@@ -305,7 +305,7 @@ class _MyHomePageState extends State<MyHomePage>
                               child: _FeatureCard(
                                 cardRadius: _cardRadius,
                                 icon: Icons.map,
-                                label: 'Campus Map',
+                                label: 'Map',
                                 onTap: () {
                                   HapticFeedback.lightImpact();
                                   Navigator.of(context)
@@ -373,33 +373,33 @@ class _MyHomePageState extends State<MyHomePage>
 
                 const SliverToBoxAdapter(child: SizedBox(height: _rowGap)),
 
-                // ── Deadman's Switch (full-width) ────────────────────────────
+                // ── Deadman's Switch (centered single tile) ──────────────────
                 SliverToBoxAdapter(
                   child: FadeTransition(
                     opacity: _row2Opacity,
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
-                      elevation: 4,
-                      color: Colors.orange.withValues(alpha: 0.15),
-                      child: ListTile(
-                        leading: const Icon(Icons.shield,
-                            color: Colors.orange, size: 32),
-                        title: const Text(
-                          "Deadman's Switch",
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                    child: SlideTransition(
+                      position: _row2Slide,
+                      child: Center(
+                        child: FractionallySizedBox(
+                          widthFactor: 0.5,
+                          child: SizedBox(
+                            height: _featureTileHeight,
+                            child: _FeatureCard(
+                              cardRadius: _cardRadius,
+                              icon: Icons.shield_rounded,
+                              label: "Deadman's Switch",
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const DeadmanSetupScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
                         ),
-                        subtitle:
-                            const Text('Start a safety timer for your trip'),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const DeadmanSetupScreen()),
-                          );
-                        },
                       ),
                     ),
                   ),

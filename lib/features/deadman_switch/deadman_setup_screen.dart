@@ -83,7 +83,9 @@ class _DeadmanSetupScreenState extends State<DeadmanSetupScreen> {
 
       if (!mounted) return;
 
-      print("=== DEADMAN: Trip started successfully. ID: ${createdTrip.tripId} ===");
+      debugPrint(
+        "=== DEADMAN: Trip started successfully. ID: ${createdTrip.tripId} ===",
+      );
 
       Navigator.pushReplacement(
         context,
@@ -117,9 +119,11 @@ class _DeadmanSetupScreenState extends State<DeadmanSetupScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
+                  color: Colors.orange.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                  border: Border.all(
+                    color: Colors.orange.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: const Row(
                   children: [
@@ -158,6 +162,7 @@ class _DeadmanSetupScreenState extends State<DeadmanSetupScreen> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
+                key: ValueKey(_selectedDestination),
                 decoration: InputDecoration(
                   labelText: 'Select Destination',
                   prefixIcon: const Icon(Icons.location_on),
@@ -165,7 +170,7 @@ class _DeadmanSetupScreenState extends State<DeadmanSetupScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                value:
+                initialValue:
                     _selectedDestination.isEmpty ? null : _selectedDestination,
                 items: _campusLocations
                     .map((loc) => DropdownMenuItem(value: loc, child: Text(loc)))
