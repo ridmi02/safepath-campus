@@ -31,7 +31,7 @@ class _AlertSentScreenState extends State<AlertSentScreen> {
         );
       }
     } catch (e) {
-      print("=== DEADMAN: Call error: $e ===");
+      debugPrint("=== DEADMAN: Call error: $e ===");
     }
   }
 
@@ -55,7 +55,7 @@ class _AlertSentScreenState extends State<AlertSentScreen> {
     try {
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri);
-        print("=== DEADMAN: SMS app opened for $phone ===");
+        debugPrint("=== DEADMAN: SMS app opened for $phone ===");
       } else {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -66,7 +66,7 @@ class _AlertSentScreenState extends State<AlertSentScreen> {
         );
       }
     } catch (e) {
-      print("=== DEADMAN: SMS error: $e ===");
+      debugPrint("=== DEADMAN: SMS error: $e ===");
     }
   }
 
@@ -109,9 +109,9 @@ class _AlertSentScreenState extends State<AlertSentScreen> {
                   _alertCancelled = true;
                 });
 
-                print("=== DEADMAN: Alert cancelled successfully ===");
+                debugPrint("=== DEADMAN: Alert cancelled successfully ===");
               } catch (e) {
-                print("=== DEADMAN: Cancel alert error: $e ===");
+                debugPrint("=== DEADMAN: Cancel alert error: $e ===");
                 if (mounted) {
                   setState(() => _isCancelling = false);
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -187,7 +187,7 @@ class _AlertSentScreenState extends State<AlertSentScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(

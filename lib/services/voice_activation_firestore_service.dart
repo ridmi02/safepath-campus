@@ -57,8 +57,8 @@ class VoiceActivationFirestoreService {
         'userId': FirebaseAuth.instance.currentUser?.uid,
         if (panicWord != null && panicWord.trim().isNotEmpty)
           'panicWord': panicWord.trim(),
-        if (latitude != null) 'lat': latitude,
-        if (longitude != null) 'lng': longitude,
+        ...?(latitude == null ? null : {'lat': latitude}),
+        ...?(longitude == null ? null : {'lng': longitude}),
       });
       debugPrint(
         'VoiceActivationFirestore: saved doc ${ref.id} → collection "$eventsCollectionName"',
