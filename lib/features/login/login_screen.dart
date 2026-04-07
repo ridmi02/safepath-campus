@@ -62,17 +62,17 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       if (userModel == null) {
-        // User authenticated but has no Firestore profile
-        // This happens for manually created accounts
+        // User authenticated but profile doc wasn't found in known collections.
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Account exists but profile not found. Please register through the app.'),
+            content: Text('Logged in, but profile was not found. Opening home screen.'),
             backgroundColor: Colors.orange,
           ),
         );
-        // Sign out since they don't have a complete profile
-        await authService.signOut();
-        setState(() => _isLoading = false);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MyHomePage()),
+        );
         return;
       }
 
@@ -123,8 +123,8 @@ class _LoginScreenState extends State<LoginScreen> {
       print("=== END ERROR ===");
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Invalid email or password.'),
+        SnackBar(
+          content: Text('Login failed: $e'),
           backgroundColor: Colors.red,
         ),
       );

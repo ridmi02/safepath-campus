@@ -40,15 +40,25 @@ class UserModel {
 
   /// Creates a [UserModel] from a Firestore document map.
   factory UserModel.fromMap(Map<String, dynamic> map) {
+    final createdAtRaw = map['createdAt'];
+    DateTime createdAt;
+    if (createdAtRaw is Timestamp) {
+      createdAt = createdAtRaw.toDate();
+    } else if (createdAtRaw is DateTime) {
+      createdAt = createdAtRaw;
+    } else {
+      createdAt = DateTime.now();
+    }
+
     return UserModel(
-      uid: map['uid'] as String,
-      fullName: map['fullName'] as String,
-      email: map['email'] as String,
-      sliitId: map['sliitId'] as String,
+      uid: (map['uid'] ?? '').toString(),
+      fullName: (map['fullName'] ?? map['name'] ?? 'User').toString(),
+      email: (map['email'] ?? '').toString(),
+      sliitId: (map['sliitId'] ?? map['studentId'] ?? '').toString(),
       verificationStatus: map['verificationStatus'] as String? ?? 'pending',
       rejectionReason: map['rejectionReason'] as String?,
-      idCardImageUrl: map['idCardImageUrl'] as String,
-      createdAt: (map['createdAt'] as Timestamp).toDate(),
+      idCardImageUrl: (map['idCardImageUrl'] ?? '').toString(),
+      createdAt: createdAt,
       role: map['role'] as String? ?? 'student',
     );
   }
