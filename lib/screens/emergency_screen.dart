@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:telephony/telephony.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_vibrate/flutter_vibrate.dart';
 import 'dart:ui';
-import 'package:permission_handler/permission_handler.dart';
 import '../services/emergency_alarm_service.dart';
 import '../services/app_theme.dart';
 import 'emergency_active_page.dart';
@@ -104,28 +102,8 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
   }
 
   Future<void> _checkPermissions() async {
-    // Requesting critical permissions early ensures background services function.
-    // SMS is needed for Telephony, Location for GPS coordinates, 
-    // and Notification for the Foreground Service.
-    Map<Permission, PermissionStatus> statuses = await [
-      Permission.sms,
-      Permission.location,
-      Permission.notification,
-    ].request();
-
-    // Also trigger Telephony's internal permission requester 
-    // to ensure the plugin state is ready.
-    await Telephony.instance.requestPhoneAndSmsPermissions;
-
-    if (statuses[Permission.sms]?.isDenied ?? false) {
-      debugPrint("SMS permission denied");
-    }
-    if (statuses[Permission.location]?.isDenied ?? false) {
-      debugPrint("Location permission denied");
-    }
-    if (statuses[Permission.notification]?.isDenied ?? false) {
-      debugPrint("Notification permission denied");
-    }
+    // url_launcher opens the system SMS app — no direct SMS send permission required.
+    debugPrint("SMS will be sent via url_launcher (system SMS app).");
   }
 
   Future<void> _triggerEmergencyAlert() async {

@@ -52,4 +52,24 @@ class DefaultFirebaseOptions {
     storageBucket: 'safepathcampus.firebasestorage.app',
     iosBundleId: 'com.example.safepathCampus',
   );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyAnHyheglNgFj7itR0N6Iy7WMAt3eE4dDU',
+    appId: '1:685856606892:ios:d5460b73d4a3ecd4a06d09',
+    messagingSenderId: '685856606892',
+    projectId: 'safepathcampus',
+    storageBucket: 'safepathcampus.firebasestorage.app',
+    iosBundleId: 'com.example.safepathCampus',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyB9GoQrYPFdHLAHwYkeDn6Qn5VVFpCr_QA',
+    appId: '1:685856606892:web:3436809fd5afde38a06d09',
+    messagingSenderId: '685856606892',
+    projectId: 'safepathcampus',
+    authDomain: 'safepathcampus.firebaseapp.com',
+    storageBucket: 'safepathcampus.firebasestorage.app',
+    measurementId: 'G-5YKNNTED8B',
+  );
+
 }

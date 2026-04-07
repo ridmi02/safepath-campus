@@ -4,6 +4,7 @@ import 'package:safepath_campus/screens/emergency_screen.dart';
 import 'package:safepath_campus/services/firebase_service.dart';
 import 'package:safepath_campus/services/voice_activation_page.dart';
 import 'package:safepath_campus/services/emergency_alarm_service.dart';
+import '../deadman_switch/deadman_setup_screen.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -108,15 +109,11 @@ class _MyHomePageState extends State<MyHomePage>
         actions: [
           IconButton(
             icon: const Icon(Icons.person),
-            onPressed: () {
-              Navigator.of(context).pushNamed('/profile');
-            },
+            onPressed: () => Navigator.of(context).pushNamed('/profile'),
           ),
           IconButton(
             icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.of(context).pushNamed('/settings');
-            },
+            onPressed: () => Navigator.of(context).pushNamed('/settings'),
           ),
         ],
       ),
@@ -135,6 +132,7 @@ class _MyHomePageState extends State<MyHomePage>
                 parent: AlwaysScrollableScrollPhysics(),
               ),
               slivers: [
+                // ── Hero banner ─────────────────────────────────────────────
                 SliverToBoxAdapter(
                   child: FadeTransition(
                     opacity: _heroOpacity,
@@ -204,7 +202,11 @@ class _MyHomePageState extends State<MyHomePage>
                     ),
                   ),
                 ),
-                const SliverToBoxAdapter(child: SizedBox(height: _sectionSpacing)),
+
+                const SliverToBoxAdapter(
+                    child: SizedBox(height: _sectionSpacing)),
+
+                // ── SOS button ───────────────────────────────────────────────
                 SliverToBoxAdapter(
                   child: FadeTransition(
                     opacity: _sosOpacity,
@@ -253,7 +255,11 @@ class _MyHomePageState extends State<MyHomePage>
                     ),
                   ),
                 ),
-                const SliverToBoxAdapter(child: SizedBox(height: _sectionSpacing)),
+
+                const SliverToBoxAdapter(
+                    child: SizedBox(height: _sectionSpacing)),
+
+                // ── Section divider ──────────────────────────────────────────
                 SliverToBoxAdapter(
                   child: FadeTransition(
                     opacity: _row1Opacity,
@@ -264,100 +270,142 @@ class _MyHomePageState extends State<MyHomePage>
                   ),
                 ),
                 const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+                // ── Row 1: Emergency Alert + Campus Map ──────────────────────
                 SliverToBoxAdapter(
                   child: FadeTransition(
                     opacity: _row1Opacity,
                     child: SlideTransition(
                       position: _row1Slide,
                       child: Row(
-                    children: [
-                      Expanded(
-                        child: SizedBox(
-                          height: _featureTileHeight,
-                          child: _FeatureCard(
-                            cardRadius: _cardRadius,
-                            icon: Icons.emergency_share,
-                            label: 'Emergency Alert System',
-                            onTap: () {
-                              HapticFeedback.lightImpact();
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const EmergencyScreen(),
-                                ),
-                              );
-                            },
+                        children: [
+                          Expanded(
+                            child: SizedBox(
+                              height: _featureTileHeight,
+                              child: _FeatureCard(
+                                cardRadius: _cardRadius,
+                                icon: Icons.emergency_share,
+                                label: 'Emergency Alert System',
+                                onTap: () {
+                                  HapticFeedback.lightImpact();
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const EmergencyScreen(),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(width: _rowGap),
-                      Expanded(
-                        child: SizedBox(
-                          height: _featureTileHeight,
-                          child: _FeatureCard(
-                            cardRadius: _cardRadius,
-                            icon: Icons.map,
-                            label: 'Campus Map',
-                            onTap: () {
-                              HapticFeedback.lightImpact();
-                              Navigator.of(context).pushNamed('/campus_map');
-                            },
+                          const SizedBox(width: _rowGap),
+                          Expanded(
+                            child: SizedBox(
+                              height: _featureTileHeight,
+                              child: _FeatureCard(
+                                cardRadius: _cardRadius,
+                                icon: Icons.map,
+                                label: 'Campus Map',
+                                onTap: () {
+                                  HapticFeedback.lightImpact();
+                                  Navigator.of(context)
+                                      .pushNamed('/campus_map');
+                                },
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: _rowGap)),
-            SliverToBoxAdapter(
-              child: FadeTransition(
-                opacity: _row2Opacity,
-                child: SlideTransition(
-                  position: _row2Slide,
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: SizedBox(
-                          height: _featureTileHeight,
-                          child: _FeatureCard(
-                            cardRadius: _cardRadius,
-                            icon: Icons.record_voice_over,
-                            label: 'Voice Activation',
-                            onTap: () {
-                              HapticFeedback.lightImpact();
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const VoiceActivationPage(),
-                                ),
-                              );
-                            },
+
+                const SliverToBoxAdapter(child: SizedBox(height: _rowGap)),
+
+                // ── Row 2: Voice Activation + Companion ──────────────────────
+                SliverToBoxAdapter(
+                  child: FadeTransition(
+                    opacity: _row2Opacity,
+                    child: SlideTransition(
+                      position: _row2Slide,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: SizedBox(
+                              height: _featureTileHeight,
+                              child: _FeatureCard(
+                                cardRadius: _cardRadius,
+                                icon: Icons.record_voice_over,
+                                label: 'Voice Activation',
+                                onTap: () {
+                                  HapticFeedback.lightImpact();
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const VoiceActivationPage(),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(width: _rowGap),
-                      Expanded(
-                        child: SizedBox(
-                          height: _featureTileHeight,
-                          child: _FeatureCard(
-                            cardRadius: _cardRadius,
-                            icon: Icons.groups_2,
-                            label: 'Companion',
-                            onTap: () {
-                              HapticFeedback.lightImpact();
-                              Navigator.of(context).pushNamed('/companion');
-                            },
+                          const SizedBox(width: _rowGap),
+                          Expanded(
+                            child: SizedBox(
+                              height: _featureTileHeight,
+                              child: _FeatureCard(
+                                cardRadius: _cardRadius,
+                                icon: Icons.groups_2,
+                                label: 'Companion',
+                                onTap: () {
+                                  HapticFeedback.lightImpact();
+                                  Navigator.of(context)
+                                      .pushNamed('/companion');
+                                },
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+                const SliverToBoxAdapter(child: SizedBox(height: _rowGap)),
+
+                // ── Deadman's Switch (full-width) ────────────────────────────
+                SliverToBoxAdapter(
+                  child: FadeTransition(
+                    opacity: _row2Opacity,
+                    child: Card(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                      elevation: 4,
+                      color: Colors.orange.withValues(alpha: 0.15),
+                      child: ListTile(
+                        leading: const Icon(Icons.shield,
+                            color: Colors.orange, size: 32),
+                        title: const Text(
+                          "Deadman's Switch",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle:
+                            const Text('Start a safety timer for your trip'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const DeadmanSetupScreen()),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
               ],
             ),
           ),
@@ -367,7 +415,8 @@ class _MyHomePageState extends State<MyHomePage>
   }
 }
 
-/// Soft page texture: dots + large washes using only [ColorScheme] tints.
+// ── Background painters ──────────────────────────────────────────────────────
+
 class _HomeBackdropPainter extends CustomPainter {
   _HomeBackdropPainter({required this.colorScheme});
 
@@ -441,6 +490,8 @@ class _HeroStripesPainter extends CustomPainter {
   bool shouldRepaint(covariant _HeroStripesPainter oldDelegate) =>
       oldDelegate.color != color;
 }
+
+// ── Helper widgets ───────────────────────────────────────────────────────────
 
 class _DecorCircle extends StatelessWidget {
   const _DecorCircle({
