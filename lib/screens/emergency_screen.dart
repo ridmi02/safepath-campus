@@ -203,7 +203,31 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
     });
 
     // Trigger the actual SOS alerts (SMS and Firestore)
-    await _alertService.activateEmergency();
+    final smsLaunchSuccess = await _alertService.activateEmergency();
+
+    if (mounted) {
+      if (smsLaunchSuccess) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Emergency Alert Activated! Opening SMS app(s)...'),
+            backgroundColor: AppTheme.warningRed,
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'CANCEL',
+              textColor: Colors.white,
+              onPressed: _cancelAlert,
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to open SMS app. Alert sent to server.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    }
 
     if (!mounted) return;
     Navigator.of(context).pushNamed(

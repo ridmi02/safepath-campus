@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
@@ -337,8 +338,8 @@ class EmergencyAlertService {
   }
 
   /// Trigger emergency alert and send notifications to all contacts
-  Future<void> activateEmergency() async {
-    if (_isAlertActive) return;
+  Future<bool> activateEmergency({bool forceResendSms = true}) async {
+    bool alreadyActive = _isAlertActive;
     _isAlertActive = true;
 
     final user = await _ensureAuthenticated();
@@ -354,24 +355,34 @@ class EmergencyAlertService {
       }
     }
 
+    // If it was already active and we don't want to resend, just return success of activation
+    if (alreadyActive && !forceResendSms) return true;
+
     try {
       final contacts = await getEmergencyContacts();
+      
+      if (contacts.isEmpty) {
+        debugPrint('EmergencyAlertService: No emergency contacts found.');
+        return false;
+      }
+
       final phoneNumbers = contacts
           .map((c) => (c['phone'] ?? '').toString())
           .where((p) => p.isNotEmpty)
           .toList();
-      
       if (phoneNumbers.isNotEmpty) {
-        await _sendEmergencyNotification(phoneNumbers);
+        return await _sendEmergencyNotification(phoneNumbers); // Return the result of SMS launch
       }
+      return false; // No phone numbers to send to
     } catch (e) {
       debugPrint('Error activating emergency alert: $e');
+      return false; // Indicate failure
     }
   }
 
   /// Send emergency notification to a phone number
   /// This integrates with Firebase Cloud Functions for SMS delivery
-  Future<void> _sendEmergencyNotification(List<String> phoneNumbers) async {
+  Future<bool> _sendEmergencyNotification(List<String> phoneNumbers) async { // Change return type to bool
     try {
       // Get current location
       String locationString = 'Unknown Location';
@@ -395,29 +406,44 @@ class EmergencyAlertService {
       final customMsg = await getCustomSosMessage();
       final String messageBody = "$customMsg My location: $locationString";
 
-      for (String phone in phoneNumbers) {
-        try {
-          final uri = Uri.parse('sms:$phone?body=${Uri.encodeComponent(messageBody)}');
-          if (await canLaunchUrl(uri)) {
-            await launchUrl(uri);
-          } else {
-            debugPrint("Cannot launch SMS URI for $phone");
-          }
-        } catch (e) {
-          debugPrint("Error sending SMS to $phone: $e");
-        }
-      }
-
-      // Also log to Firebase (optional backup)
+      // 1. Send to Firebase first as a guaranteed backup.
+      // This ensures the server is notified even if the local SMS app fails to open.
       await NotificationService.sendEmergencyNotification(
         phoneNumbers: phoneNumbers,
         userName: 'SafePath User',
         userLocation: locationString,
       );
+
+      // 2. Construct SMS URI.
+      // Android uses ',' as separator. iOS prefers ';'.
+      final String separator = Platform.isAndroid ? ',' : ';';
+      final String recipients = phoneNumbers.join(separator);
       
-      debugPrint('Emergency alert initiated for: $phoneNumbers at $locationString');
+      // Use Uri.parse to prevent the constructor from encoding the separators,
+      // which often breaks multi-recipient support.
+      final String smsUrl = "sms:$recipients?body=${Uri.encodeComponent(messageBody)}";
+      final Uri smsUri = Uri.parse(smsUrl);
+
+      try {
+        // Using externalApplication mode is the most reliable way to trigger the system SMS app.
+        final bool launched = await launchUrl(
+          smsUri,
+          mode: LaunchMode.externalApplication,
+        );
+        
+        if (!launched && phoneNumbers.isNotEmpty) {
+          // Fallback to the first number if the multi-recipient URI failed
+          final Uri fallbackUri = Uri.parse("sms:${phoneNumbers.first}?body=${Uri.encodeComponent(messageBody)}");
+          return await launchUrl(fallbackUri, mode: LaunchMode.externalApplication);
+        }
+        return launched;
+      } catch (e) {
+        debugPrint("Could not launch SMS app: $e");
+        return false;
+      }
     } catch (e) {
       debugPrint('Error sending notification: $e');
+      return false; // Indicate failure due to an exception
     }
   }
 
