@@ -338,7 +338,7 @@ class EmergencyAlertService {
   }
 
   /// Trigger emergency alert and send notifications to all contacts
-  Future<bool> activateEmergency({bool forceResendSms = true}) async {
+  Future<bool> activateEmergency({bool forceResendSms = true, String? emergencyType}) async {
     bool alreadyActive = _isAlertActive;
     _isAlertActive = true;
 
@@ -348,6 +348,7 @@ class EmergencyAlertService {
       try {
         await _firestore.collection('Users').doc(user.uid).set({
           'isEmergencyActive': true,
+          'emergencyType': emergencyType ?? 'General',
           'lastAlertAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
       } catch (e) {
@@ -371,7 +372,7 @@ class EmergencyAlertService {
           .where((p) => p.isNotEmpty)
           .toList();
       if (phoneNumbers.isNotEmpty) {
-        return await _sendEmergencyNotification(phoneNumbers); // Return the result of SMS launch
+        return await _sendEmergencyNotification(phoneNumbers, emergencyType: emergencyType); // Return the result of SMS launch
       }
       return false; // No phone numbers to send to
     } catch (e) {
@@ -382,7 +383,7 @@ class EmergencyAlertService {
 
   /// Send emergency notification to a phone number
   /// This integrates with Firebase Cloud Functions for SMS delivery
-  Future<bool> _sendEmergencyNotification(List<String> phoneNumbers) async { // Change return type to bool
+  Future<bool> _sendEmergencyNotification(List<String> phoneNumbers, {String? emergencyType}) async { // Change return type to bool
     try {
       // Get current location
       String locationString = 'Unknown Location';
@@ -404,7 +405,8 @@ class EmergencyAlertService {
 
       // Send SMS to each contact via system SMS app (url_launcher)
       final customMsg = await getCustomSosMessage();
-      final String messageBody = "$customMsg My location: $locationString";
+      final String typeHeader = emergencyType != null ? "[$emergencyType Alert] " : "";
+      final String messageBody = "$typeHeader$customMsg My location: $locationString";
 
       // 1. Send to Firebase first as a guaranteed backup.
       // This ensures the server is notified even if the local SMS app fails to open.

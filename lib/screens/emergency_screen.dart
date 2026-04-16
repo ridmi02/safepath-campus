@@ -128,7 +128,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
     });
     
     // Activate emergency alert
-    await _alertService.activateEmergency();
+    await _alertService.activateEmergency(emergencyType: _selectedEmergencyType);
     _simulateDispatchProgress();
     
     if (mounted) {
@@ -203,7 +203,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
     });
 
     // Trigger the actual SOS alerts (SMS and Firestore)
-    final smsLaunchSuccess = await _alertService.activateEmergency();
+    final smsLaunchSuccess = await _alertService.activateEmergency(emergencyType: _selectedEmergencyType);
 
     if (mounted) {
       if (smsLaunchSuccess) {
