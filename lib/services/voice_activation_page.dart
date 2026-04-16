@@ -232,7 +232,7 @@ class _VoiceActivationPageState extends State<VoiceActivationPage> with TickerPr
     return Stack(
       children: [
         Scaffold(
-          backgroundColor: const Color(0xFFF3E5F5),
+          backgroundColor: colorScheme.surface,
           appBar: AppBar(
             title: const Text('Voice Activation',
                 style: TextStyle(fontWeight: FontWeight.bold)),
@@ -315,7 +315,7 @@ class _VoiceActivationPageState extends State<VoiceActivationPage> with TickerPr
                 leading: Icon(Icons.history, size: 16, color: primaryColor),
                 title: Text(
                   _speechHistory[index],
-                  style: const TextStyle(fontSize: 13, color: Colors.black87),
+                  style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurface),
                 ),
               );
             },
@@ -326,6 +326,7 @@ class _VoiceActivationPageState extends State<VoiceActivationPage> with TickerPr
   }
 
   Widget _buildInstructionCard(Color primaryColor) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Card(
       elevation: 0,
       color: primaryColor.withValues(alpha: 0.05),
@@ -333,16 +334,16 @@ class _VoiceActivationPageState extends State<VoiceActivationPage> with TickerPr
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(color: primaryColor.withValues(alpha: 0.2)),
       ),
-      child: const Padding(
-        padding: EdgeInsets.all(12.0),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
         child: Row(
           children: [
-            Icon(Icons.info_outline, color: Colors.black54, size: 20),
-            SizedBox(width: 12),
+            Icon(Icons.info_outline, color: colorScheme.onSurfaceVariant, size: 20),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
                 'Set trigger words (comma separated). SafePath will listen and trigger SOS if any match.',
-                style: TextStyle(fontSize: 13, color: Colors.black87),
+                style: TextStyle(fontSize: 13, color: colorScheme.onSurface),
               ),
             ),
           ],
@@ -352,7 +353,8 @@ class _VoiceActivationPageState extends State<VoiceActivationPage> with TickerPr
   }
 
   Widget _buildHeaderSection() {
-    final primaryColor = Theme.of(context).colorScheme.primary;
+    final colorScheme = Theme.of(context).colorScheme;
+    final primaryColor = colorScheme.primary;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -370,13 +372,13 @@ class _VoiceActivationPageState extends State<VoiceActivationPage> with TickerPr
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: _isListening ? Colors.green.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.1),
+                color: _isListening ? Colors.green.withValues(alpha: 0.1) : colorScheme.onSurface.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
                 _isListening ? '● Actively Listening' : '○ Monitoring Paused',
                 style: TextStyle(
-                    color: _isListening ? Colors.green : Colors.black54,
+                    color: _isListening ? Colors.green : colorScheme.onSurfaceVariant,
                     fontSize: 12,
                     fontWeight: FontWeight.w600),
               ),
@@ -429,10 +431,10 @@ class _VoiceActivationPageState extends State<VoiceActivationPage> with TickerPr
                     height: 100,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: _isListening ? Colors.redAccent : primaryColor,
+                      color: _isListening ? Theme.of(context).colorScheme.error : primaryColor,
                       boxShadow: [
                         BoxShadow(
-                            color: (_isListening ? Colors.redAccent : primaryColor)
+                            color: (_isListening ? Theme.of(context).colorScheme.error : primaryColor)
                                 .withValues(alpha: 0.4),
                             blurRadius: 20,
                             spreadRadius: 5)
@@ -440,7 +442,7 @@ class _VoiceActivationPageState extends State<VoiceActivationPage> with TickerPr
                     ),
                     child: Icon(
                       _isListening ? Icons.mic : Icons.mic_none,
-                      color: Colors.white,
+                      color: _isListening ? Theme.of(context).colorScheme.onError : Colors.white,
                       size: 40,
                     ),
                   ),
@@ -473,6 +475,7 @@ class _VoiceActivationPageState extends State<VoiceActivationPage> with TickerPr
   }
 
   Widget _buildTranscriptSection() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -483,7 +486,7 @@ class _VoiceActivationPageState extends State<VoiceActivationPage> with TickerPr
           controller: _panicWordController,
           decoration: InputDecoration(
             filled: true,
-            fillColor: Colors.white,
+            fillColor: colorScheme.surfaceContainerLow,
             hintText: 'e.g. Help, Emergency, Save me',
             border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -499,12 +502,12 @@ class _VoiceActivationPageState extends State<VoiceActivationPage> with TickerPr
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                  color: colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2))),
+                  border: Border.all(color: colorScheme.primary.withValues(alpha: 0.2))),
               child: Text('Recognized: "$_lastWords"',
-                  style: const TextStyle(
-                      fontStyle: FontStyle.italic, color: Colors.black87)),
+                  style: TextStyle(
+                      fontStyle: FontStyle.italic, color: colorScheme.onSurface)),
             ),
           ),
       ],
@@ -512,6 +515,7 @@ class _VoiceActivationPageState extends State<VoiceActivationPage> with TickerPr
   }
 
   Widget _buildMessageSection() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -523,7 +527,7 @@ class _VoiceActivationPageState extends State<VoiceActivationPage> with TickerPr
           maxLines: 2,
           decoration: InputDecoration(
             filled: true,
-            fillColor: Colors.white,
+            fillColor: colorScheme.surfaceContainerLow,
             hintText: 'Enter custom text to send in SMS...',
             border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -533,16 +537,17 @@ class _VoiceActivationPageState extends State<VoiceActivationPage> with TickerPr
           ),
         ),
         const SizedBox(height: 4),
-        const Text('Location link will be added automatically.',
-            style: TextStyle(fontSize: 12, color: Colors.black45)),
+        Text('Location link will be added automatically.',
+            style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
       ],
     );
   }
 
   Widget _buildSettingsSection(BuildContext context) {
-    final primaryColor = Theme.of(context).colorScheme.primary;
+    final colorScheme = Theme.of(context).colorScheme;
+    final primaryColor = colorScheme.primary;
     return Card(
-      color: Colors.white.withValues(alpha: 0.7),
+      color: colorScheme.surfaceContainer,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -580,7 +585,7 @@ class _VoiceActivationPageState extends State<VoiceActivationPage> with TickerPr
                     inactiveColor: primaryColor.withValues(alpha: 0.2),
                   ),
                 ),
-                Text("$_countdown s", style: const TextStyle(color: Colors.black54)),
+                Text("$_countdown s", style: TextStyle(color: colorScheme.onSurfaceVariant)),
               ],
             ),
             const Divider(),
@@ -611,28 +616,29 @@ class _VoiceActivationPageState extends State<VoiceActivationPage> with TickerPr
   }
 
   Widget _buildEmergencyCountdown() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      color: Colors.red.withValues(alpha: 0.9),
+      color: colorScheme.error.withValues(alpha: 0.9),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text("EMERGENCY TRIGGERED",
+            Text("EMERGENCY TRIGGERED",
                 style: TextStyle(
-                    color: Colors.white,
+                    color: colorScheme.onError,
                     fontSize: 24,
                     fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
             Text("$_countdown",
-                style: const TextStyle(
-                    color: Colors.white,
+                style: TextStyle(
+                    color: colorScheme.onError,
                     fontSize: 80,
                     fontWeight: FontWeight.bold)),
             const SizedBox(height: 40),
             ElevatedButton(
               onPressed: _cancelEmergency,
               style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white, foregroundColor: Colors.red),
+                  backgroundColor: colorScheme.onError, foregroundColor: colorScheme.error),
               child: const Text("CANCEL ALERT"),
             ),
           ],

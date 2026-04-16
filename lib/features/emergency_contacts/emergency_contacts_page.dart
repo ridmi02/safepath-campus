@@ -164,7 +164,7 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      backgroundColor: AppTheme.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -189,13 +189,13 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
                         isEdit ? 'Edit contact' : 'Add emergency contact',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: AppTheme.textDark,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                       ),
                       Text(
                         'Synced to Firestore under your user document.',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppTheme.textLight,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
                       ),
                       const SizedBox(height: 20),
@@ -210,7 +210,7 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
                             borderRadius: BorderRadius.circular(14),
                           ),
                           filled: true,
-                          fillColor: AppTheme.lightGray,
+                          fillColor: Theme.of(context).colorScheme.surfaceContainer,
                         ),
                         validator: _validateName,
                         inputFormatters: [
@@ -229,7 +229,7 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
                             borderRadius: BorderRadius.circular(14),
                           ),
                           filled: true,
-                          fillColor: AppTheme.lightGray,
+                          fillColor: Theme.of(context).colorScheme.surfaceContainer,
                         ),
                         validator: _validatePhone,
                         inputFormatters: [
@@ -252,7 +252,7 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
                             borderRadius: BorderRadius.circular(14),
                           ),
                           filled: true,
-                          fillColor: AppTheme.lightGray,
+                          fillColor: Theme.of(context).colorScheme.surfaceContainer,
                         ),
                         items: _relationPresets
                             .map(
@@ -281,7 +281,7 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
                               borderRadius: BorderRadius.circular(14),
                             ),
                             filled: true,
-                            fillColor: AppTheme.lightGray,
+                            fillColor: Theme.of(context).colorScheme.surfaceContainer,
                           ),
                           maxLength: 40,
                           validator: (v) {
@@ -295,7 +295,7 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
                       const SizedBox(height: 22),
                       FilledButton(
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppTheme.primaryPurple,
+                          backgroundColor: Theme.of(context).colorScheme.primary,
                           foregroundColor: AppTheme.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
@@ -373,20 +373,21 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
 
   Widget _filterChip(String label, _RelationFilter value) {
     final selected = _filter == value;
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: FilterChip(
         label: Text(label),
         selected: selected,
         onSelected: (_) => setState(() => _filter = value),
-        selectedColor: AppTheme.lightPurple,
-        checkmarkColor: AppTheme.primaryPurple,
+        selectedColor: colorScheme.primaryContainer,
+        checkmarkColor: colorScheme.primary,
         labelStyle: TextStyle(
-          color: selected ? AppTheme.primaryPurple : AppTheme.textDark,
+          color: selected ? colorScheme.onPrimaryContainer : colorScheme.onSurface,
           fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
         ),
         side: BorderSide(
-          color: selected ? AppTheme.primaryPurple : AppTheme.mediumGray,
+          color: selected ? colorScheme.primary : colorScheme.outline,
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
@@ -401,9 +402,9 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: AppTheme.lightGray,
+      backgroundColor: theme.colorScheme.surface,
       body: RefreshIndicator(
-        color: AppTheme.primaryPurple,
+        color: theme.colorScheme.primary,
         onRefresh: _loadContacts,
         child: CustomScrollView(
         physics: _loading
@@ -413,7 +414,7 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
           SliverAppBar.large(
             expandedHeight: 132,
             pinned: true,
-            backgroundColor: AppTheme.primaryPurple,
+            backgroundColor: theme.colorScheme.primary,
             foregroundColor: AppTheme.white,
             title: const Text('Emergency contacts'),
             actions: [
@@ -433,7 +434,7 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
                   Material(
                     elevation: 0,
                     borderRadius: BorderRadius.circular(16),
-                    color: AppTheme.white,
+                    color: theme.colorScheme.surfaceContainer,
                     child: TextField(
                       controller: _searchController,
                       onChanged: (v) {
@@ -449,7 +450,7 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
                         hintText: 'Search by name, phone, or relation',
                         prefixIcon: const Icon(
                           Icons.search_rounded,
-                          color: AppTheme.textLight,
+                          color: AppTheme.mediumGray,
                         ),
                         suffixIcon: _searchQuery.isNotEmpty
                             ? IconButton(
@@ -465,7 +466,7 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
                           borderSide: BorderSide.none,
                         ),
                         filled: true,
-                        fillColor: AppTheme.white,
+                        fillColor: theme.colorScheme.surfaceContainer,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 14,
@@ -518,7 +519,7 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
                       : '?';
 
                   return Material(
-                    color: AppTheme.white,
+                    color: theme.colorScheme.surfaceContainerLow,
                     elevation: 0,
                     shadowColor: Colors.black26,
                     borderRadius: BorderRadius.circular(18),
@@ -536,10 +537,10 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
                               width: 52,
                               height: 52,
                               decoration: BoxDecoration(
-                                gradient: const LinearGradient(
+                                gradient: LinearGradient(
                                   colors: [
-                                    AppTheme.primaryPurple,
-                                    AppTheme.darkPurple,
+                                    theme.colorScheme.primary,
+                                    theme.colorScheme.secondary,
                                   ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
@@ -565,14 +566,14 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
                                     style: theme.textTheme.titleMedium
                                         ?.copyWith(
                                       fontWeight: FontWeight.w700,
-                                      color: AppTheme.textDark,
+                                      color: theme.colorScheme.onSurface,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
                                     phone,
                                     style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: AppTheme.textLight,
+                                      color: theme.colorScheme.onSurfaceVariant,
                                       letterSpacing: 0.2,
                                     ),
                                   ),
@@ -584,15 +585,14 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
                                         vertical: 4,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: AppTheme.lightPurple
-                                            .withValues(alpha: 0.5),
+                                        color: theme.colorScheme.primaryContainer,
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Text(
                                         relation,
                                         style: theme.textTheme.labelMedium
                                             ?.copyWith(
-                                          color: AppTheme.primaryPurple,
+                                          color: theme.colorScheme.onPrimaryContainer,
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
@@ -603,7 +603,7 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
                             ),
                             IconButton(
                               icon: const Icon(Icons.edit_outlined),
-                              color: AppTheme.primaryPurple,
+                              color: theme.colorScheme.primary,
                               onPressed: () => _openContactSheet(existing: c),
                             ),
                             IconButton(
@@ -626,7 +626,7 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openContactSheet(),
-        backgroundColor: AppTheme.primaryPurple,
+        backgroundColor: theme.colorScheme.primary,
         foregroundColor: AppTheme.white,
         icon: const Icon(Icons.add_rounded),
         label: const Text('Add contact'),
@@ -655,13 +655,13 @@ class _EmptyContactsState extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(28),
               decoration: BoxDecoration(
-                color: AppTheme.lightPurple.withValues(alpha: 0.35),
+                color: Theme.of(context).colorScheme.primaryContainer,
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 hasContacts ? Icons.search_off_rounded : Icons.contact_phone_rounded,
                 size: 56,
-                color: AppTheme.primaryPurple,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
             const SizedBox(height: 24),
@@ -670,7 +670,7 @@ class _EmptyContactsState extends StatelessWidget {
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.textDark,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
             ),
             const SizedBox(height: 8),
@@ -680,7 +680,7 @@ class _EmptyContactsState extends StatelessWidget {
                   : 'Add people who should be notified if you trigger an alert. Data is saved on-device and under Users → emergencyContacts in Firestore.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.textLight,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     height: 1.4,
                   ),
             ),
@@ -691,7 +691,7 @@ class _EmptyContactsState extends StatelessWidget {
                 icon: const Icon(Icons.add_rounded),
                 label: const Text('Add your first contact'),
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppTheme.primaryPurple,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   foregroundColor: AppTheme.white,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,

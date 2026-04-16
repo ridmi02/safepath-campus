@@ -120,12 +120,13 @@ class _EmergencyActivePageState extends State<EmergencyActivePage> {
 
   Widget _progressCard() {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final last = _steps.isEmpty ? -1 : _steps.length - 1;
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.black.withValues(alpha: 0.08)),
+        side: BorderSide(color: colorScheme.outlineVariant),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -154,7 +155,7 @@ class _EmergencyActivePageState extends State<EmergencyActivePage> {
                           border: Border.all(color: dotColor.withValues(alpha: 0.35)),
                         ),
                         child: isDone
-                            ? const Icon(Icons.check, size: 16, color: Color(0xFF2E7D32))
+                            ? Icon(Icons.check, size: 16, color: Colors.green.shade700)
                             : Padding(
                                 padding: const EdgeInsets.all(6),
                                 child: CircularProgressIndicator(
@@ -169,7 +170,7 @@ class _EmergencyActivePageState extends State<EmergencyActivePage> {
                           height: 18,
                           margin: const EdgeInsets.only(top: 6),
                           decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.10),
+                            color: colorScheme.outlineVariant,
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
@@ -183,7 +184,7 @@ class _EmergencyActivePageState extends State<EmergencyActivePage> {
                         step,
                         style: TextStyle(
                           fontWeight: isLast ? FontWeight.w800 : FontWeight.w600,
-                          color: Colors.black.withValues(alpha: 0.78),
+                          color: colorScheme.onSurface,
                         ),
                       ),
                     ),
@@ -198,11 +199,12 @@ class _EmergencyActivePageState extends State<EmergencyActivePage> {
   }
 
   Widget _ackCard() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.black.withValues(alpha: 0.08)),
+        side: BorderSide(color: colorScheme.outlineVariant),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -210,19 +212,20 @@ class _EmergencyActivePageState extends State<EmergencyActivePage> {
           children: _ack.entries.map((entry) {
             final status = entry.value;
             final statusColor = status == 'Responded'
-                ? const Color(0xFF2E7D32)
+                ? Colors.green.shade700
                 : status == 'Seen'
-                    ? const Color(0xFF1565C0)
-                    : const Color(0xFFEF6C00);
+                    ? Colors.blue.shade700
+                    : Colors.orange.shade700;
             return Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: Row(
                 children: [
-                  const Icon(Icons.phone, size: 16),
+                  Icon(Icons.phone, size: 16, color: colorScheme.onSurfaceVariant),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       entry.key,
+                      style: TextStyle(color: colorScheme.onSurface),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -253,8 +256,11 @@ class _EmergencyActivePageState extends State<EmergencyActivePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
         title: const Text('Emergency Active'),
         centerTitle: true,
@@ -266,8 +272,10 @@ class _EmergencyActivePageState extends State<EmergencyActivePage> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
-              gradient: const LinearGradient(
-                colors: [Color(0xFFFFE2E2), Color(0xFFFFF1F1)],
+              gradient: LinearGradient(
+                colors: isDark
+                    ? [colorScheme.error.withValues(alpha: 0.2), colorScheme.error.withValues(alpha: 0.1)]
+                    : const [Color(0xFFFFE2E2), Color(0xFFFFF1F1)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -296,16 +304,16 @@ class _EmergencyActivePageState extends State<EmergencyActivePage> {
                       const SizedBox(height: 4),
                       Text(
                         'Type: ${widget.args.emergencyType}',
-                        style: const TextStyle(color: Colors.black54),
+                        style: TextStyle(color: colorScheme.onSurfaceVariant),
                       ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(Icons.timer, size: 16, color: Colors.black54),
+                          Icon(Icons.timer, size: 16, color: colorScheme.onSurfaceVariant),
                           const SizedBox(width: 6),
                           Text(
                             'Active: ${_formatElapsed(_elapsed)}',
-                            style: const TextStyle(color: Colors.black54),
+                            style: TextStyle(color: colorScheme.onSurfaceVariant),
                           ),
                         ],
                       ),
@@ -324,7 +332,7 @@ class _EmergencyActivePageState extends State<EmergencyActivePage> {
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: Colors.black.withValues(alpha: 0.08)),
+              side: BorderSide(color: colorScheme.outlineVariant),
             ),
             child: Padding(
               padding: const EdgeInsets.all(14),
@@ -407,4 +415,3 @@ class _EmergencyActivePageState extends State<EmergencyActivePage> {
     );
   }
 }
-

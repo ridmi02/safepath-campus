@@ -310,6 +310,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
 
   Widget _buildAlertTypeSelector() {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -330,7 +331,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
           physics: const NeverScrollableScrollPhysics(),
           children: _emergencyTypes.map((type) {
             final selected = _selectedEmergencyType == type;
-            final color = selected ? theme.colorScheme.primary : Colors.black87;
+            final color = selected ? colorScheme.primary : colorScheme.onSurface;
             return InkWell(
               onTap: _isAlertActive ? null : () => setState(() => _selectedEmergencyType = type),
               borderRadius: BorderRadius.circular(16),
@@ -339,13 +340,13 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 decoration: BoxDecoration(
                   color: selected
-                      ? theme.colorScheme.primary.withValues(alpha: 0.10)
-                      : Colors.white,
+                      ? colorScheme.primary.withValues(alpha: 0.10)
+                      : colorScheme.surface,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: selected
-                        ? theme.colorScheme.primary.withValues(alpha: 0.45)
-                        : Colors.black.withValues(alpha: 0.08),
+                        ? colorScheme.primary.withValues(alpha: 0.45)
+                        : colorScheme.outlineVariant,
                   ),
                   boxShadow: selected
                       ? [
@@ -364,8 +365,8 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
                       height: 32,
                       decoration: BoxDecoration(
                         color: selected
-                            ? theme.colorScheme.primary.withValues(alpha: 0.18)
-                            : Colors.black.withValues(alpha: 0.05),
+                            ? colorScheme.primary.withValues(alpha: 0.18)
+                            : colorScheme.surfaceContainer,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(_typeIcon(type), color: color, size: 18),
@@ -392,7 +393,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
                             _typeSubtitle(type),
                             style: TextStyle(
                               fontSize: 10.5,
-                              color: Colors.black.withValues(alpha: 0.55),
+                              color: colorScheme.onSurfaceVariant,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -417,7 +418,8 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
   }
 
   Widget _buildContactsNavCard() {
-    final primaryColor = Theme.of(context).colorScheme.primary;
+    final colorScheme = Theme.of(context).colorScheme;
+    final primaryColor = colorScheme.primary;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -433,7 +435,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
             width: double.infinity,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: colorScheme.surface,
               borderRadius: BorderRadius.circular(24),
               border: Border.all(color: primaryColor.withValues(alpha: 0.1)),
             ),
@@ -472,7 +474,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
                         _emergencyContacts.isEmpty ? 'Add emergency contacts' : 'Manage Contacts',
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                       ),
-                      Text('${_emergencyContacts.length} people will be alerted', style: const TextStyle(color: Colors.black54, fontSize: 12)),
+                      Text('${_emergencyContacts.length} people will be alerted', style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12)),
                     ],
                   ),
                 ),
@@ -488,6 +490,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
   Widget _buildDispatchSection() {
     if (!_isAlertActive) return const SizedBox.shrink();
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final lastIdx = _dispatchSteps.isEmpty ? -1 : _dispatchSteps.length - 1;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -503,7 +506,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
-            side: BorderSide(color: Colors.black.withValues(alpha: 0.08)),
+            side: BorderSide(color: colorScheme.outlineVariant),
           ),
           child: Padding(
             padding: const EdgeInsets.all(14),
@@ -548,7 +551,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
                               height: 18,
                               margin: const EdgeInsets.only(top: 6),
                               decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.10),
+                                color: colorScheme.outlineVariant,
                                 borderRadius: BorderRadius.circular(4),
                               ),
                             ),
@@ -562,7 +565,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
                             step,
                             style: TextStyle(
                               fontWeight: isLast ? FontWeight.w800 : FontWeight.w600,
-                              color: Colors.black.withValues(alpha: 0.78),
+                              color: colorScheme.onSurface,
                             ),
                           ),
                         ),
@@ -586,7 +589,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
-            side: BorderSide(color: Colors.black.withValues(alpha: 0.08)),
+            side: BorderSide(color: colorScheme.outlineVariant),
           ),
           child: Padding(
             padding: const EdgeInsets.all(14),
@@ -633,13 +636,16 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
-    final statusColor =
-        _isAlertActive ? AppTheme.warningRed : const Color(0xFF2E7D32);
-    final statusBg =
-        _isAlertActive ? AppTheme.warningRed.withValues(alpha: 0.1) : const Color(0xFFE8F5E9);
-
+    final colorScheme = Theme.of(context).colorScheme;
+    final statusColor = _isAlertActive 
+        ? AppTheme.warningRed 
+        : const Color(0xFF2E7D32);
+    final statusBg = _isAlertActive 
+        ? AppTheme.warningRed.withValues(alpha: 0.1) 
+        : (Theme.of(context).brightness == Brightness.dark ? Colors.green.withValues(alpha: 0.2) : const Color(0xFFE8F5E9));
+    
     return Scaffold(
-      backgroundColor: const Color(0xFFF3E5F5),
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
         title: const Text('Emergency Alert System'),
         centerTitle: true,
@@ -662,11 +668,13 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
                   gradient: LinearGradient(
                     colors: _isAlertActive
                         ? const [Color(0xFFFFE2E2), Color(0xFFFFF1F1)]
-                        : const [Color(0xFFE3F7EA), Color(0xFFEEF9F2)],
+                        : (Theme.of(context).brightness == Brightness.dark
+                            ? [colorScheme.tertiaryContainer.withOpacity(0.2), colorScheme.tertiaryContainer.withOpacity(0.1)]
+                            : const [Color(0xFFE3F7EA), Color(0xFFEEF9F2)]),
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  border: Border.all(color: statusColor.withValues(alpha: 0.30)),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.3)),
                   boxShadow: [
                     BoxShadow(
                       color: statusColor.withValues(alpha: 0.10),
@@ -682,7 +690,9 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
                       backgroundColor: statusBg,
                       child: Icon(
                         _isAlertActive ? Icons.warning_amber_rounded : Icons.shield_outlined,
-                        color: statusColor,
+                        color: _isAlertActive
+                            ? statusColor
+                            : (Theme.of(context).brightness == Brightness.dark ? colorScheme.onTertiaryContainer : statusColor),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -701,7 +711,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
                           const SizedBox(height: 4),
                           Text(
                             '${_emergencyContacts.length} trusted contacts configured',
-                            style: const TextStyle(fontSize: 12, color: Colors.black54),
+                            style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                           ),
                         ],
                         ),
@@ -741,7 +751,6 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
                 ),
                 const SizedBox(height: 20),
               ],
-
               _buildAlertTypeSelector(),
               const SizedBox(height: 16),
               
@@ -773,12 +782,12 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                             elevation: 0, // Handled by container for animation
                           ),
-                          child: const Column(
+                          child: Column(
                             children: [
-                              Icon(Icons.emergency, size: 48),
-                              SizedBox(height: 8),
-                              Text('TAP FOR SOS', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                              Text('Hold for Instant Alert', style: TextStyle(fontSize: 12, color: Colors.white70)),
+                              const Icon(Icons.emergency, size: 48),
+                              const SizedBox(height: 8),
+                              const Text('TAP FOR SOS', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                              Text('Hold for Instant Alert', style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.7))),
                             ],
                           ),
                         ),
@@ -788,7 +797,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
                 ),
               ),
               const SizedBox(height: 24),
-              _buildDispatchSection(),
+              // _buildDispatchSection(), // This section is now handled by EmergencyActivePage
               if (_isAlertActive) const SizedBox(height: 24),
 
               Text(
@@ -804,8 +813,8 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
                     child: _buildToolCard(
                       icon: _isSirenPlaying ? Icons.volume_up : Icons.volume_off,
                       label: _isSirenPlaying ? 'Stop Siren' : 'Loud Siren',
-                      color: _isSirenPlaying ? AppTheme.warningRed : Colors.white,
-                      textColor: _isSirenPlaying ? Colors.white : AppTheme.textDark,
+                      color: _isSirenPlaying ? AppTheme.warningRed : Theme.of(context).colorScheme.surfaceContainerHigh,
+            textColor: _isSirenPlaying ? Theme.of(context).colorScheme.onError : Theme.of(context).colorScheme.onSurface,
                       onTap: _toggleSiren,
                     ),
                   ),
@@ -814,8 +823,8 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
                     child: _buildToolCard(
                       icon: Icons.phone_in_talk,
                       label: 'Fake Call',
-                      color: Colors.white,
-                      textColor: AppTheme.textDark,
+                      color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                      textColor: Theme.of(context).colorScheme.onSurface,
                       onTap: () {
                         Navigator.of(context).pushNamed('/fake_call');
                       },
@@ -844,10 +853,10 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
                         width: 300,
                         padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.90),
+                          color: colorScheme.surface.withValues(alpha: 0.95),
                           borderRadius: BorderRadius.circular(22),
                           border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.7),
+                            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
                           ),
                           boxShadow: [
                             BoxShadow(
@@ -897,11 +906,13 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
                               ],
                             ),
                             const SizedBox(height: 10),
-                            const Align(
+                            Align(
                               alignment: Alignment.centerLeft,
                               child: Text(
                                 'Hold tight. We’re preparing your alert…',
-                                style: TextStyle(color: Colors.black54),
+                                style: TextStyle(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
                               ),
                             ),
                             const SizedBox(height: 16),
@@ -934,11 +945,11 @@ class _EmergencyScreenState extends State<EmergencyScreen> with SingleTickerProv
                                     width: 104,
                                     height: 104,
                                     decoration: BoxDecoration(
-                                      color: Colors.white,
+                                      color: colorScheme.surface,
                                       shape: BoxShape.circle,
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.06),
+                                          color: Colors.black.withValues(alpha: 0.1),
                                           blurRadius: 12,
                                           offset: const Offset(0, 6),
                                         ),

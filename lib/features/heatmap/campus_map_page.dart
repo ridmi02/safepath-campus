@@ -364,13 +364,14 @@ class _CampusMapPageState extends State<CampusMapPage> {
   }
 
   Color _incidentColor(Incident incident) {
+    final colorScheme = Theme.of(context).colorScheme;
     switch (incident.severity) {
       case IncidentSeverity.low:
-        return Colors.amber;
-      case IncidentSeverity.medium:
         return Colors.orange;
+      case IncidentSeverity.medium:
+        return colorScheme.tertiary;
       case IncidentSeverity.high:
-        return Colors.redAccent;
+        return colorScheme.error;
     }
   }
 
@@ -1296,7 +1297,7 @@ class _CampusMapPageState extends State<CampusMapPage> {
           height: 48,
           child: const Icon(
             Icons.my_location,
-            color: Colors.blueAccent,
+            color: Colors.blue,
             size: 32,
           ),
         ),
@@ -1310,7 +1311,7 @@ class _CampusMapPageState extends State<CampusMapPage> {
           height: 48,
           child: const Icon(
             Icons.location_on,
-            color: Colors.redAccent,
+            color: Colors.red,
             size: 40,
           ),
         ),
@@ -1355,10 +1356,10 @@ class _CampusMapPageState extends State<CampusMapPage> {
                   safePoint.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               ),
@@ -1384,7 +1385,7 @@ class _CampusMapPageState extends State<CampusMapPage> {
         Polyline(
           points: _routePoints,
           strokeWidth: 6.0,
-          color: _showGreenRouteLine ? Colors.green.shade700 : Colors.redAccent,
+          color: _showGreenRouteLine ? Colors.green : Colors.red,
         ),
       );
     }
@@ -1621,7 +1622,8 @@ class _CampusMapPageState extends State<CampusMapPage> {
             onPressed: _routeToNearestSafePoint,
             mini: true,
             tooltip: 'SOS route to nearest safe point',
-            backgroundColor: Colors.orange,
+            backgroundColor: Theme.of(context).colorScheme.errorContainer,
+            foregroundColor: Theme.of(context).colorScheme.onErrorContainer,
             child: const Icon(Icons.emergency),
           ),
           const SizedBox(height: 8),
