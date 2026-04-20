@@ -7,7 +7,14 @@ import 'companion_call_page.dart';
 import 'companion_room_service.dart';
 
 class CompanionPage extends StatefulWidget {
-  const CompanionPage({super.key});
+  const CompanionPage({
+    super.key,
+    this.initialRoomCode,
+    this.autoJoinFromNotification = false,
+  });
+
+  final String? initialRoomCode;
+  final bool autoJoinFromNotification;
 
   @override
   State<CompanionPage> createState() => _CompanionPageState();
@@ -19,6 +26,23 @@ class _CompanionPageState extends State<CompanionPage> {
   bool _creatingRoom = false;
   bool _joining = false;
   bool _showCodeJoin = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialRoomCode?.trim();
+    if (initial != null && initial.isNotEmpty) {
+      _joinCodeController.text = initial.toUpperCase();
+      _showCodeJoin = true;
+      if (widget.autoJoinFromNotification) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _joinWalk();
+          }
+        });
+      }
+    }
+  }
 
   @override
   void dispose() {

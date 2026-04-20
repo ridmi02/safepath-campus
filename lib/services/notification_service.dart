@@ -3,20 +3,43 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:safepath_campus/features/companion/companion_page.dart';
 
 class NotificationService {
   static final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   static final FirebaseAuth _auth = FirebaseAuth.instance;
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  static final FlutterLocalNotificationsPlugin _localNotifications =
+      FlutterLocalNotificationsPlugin();
+  static StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
+      _companionRequestSubscription;
+  static final Set<String> _shownCompanionRequestIds = <String>{};
+  static GlobalKey<NavigatorState>? _navigatorKey;
 
   /// Initialize Firebase Messaging and request notification permissions
-  static Future<void> initialize() async {
+  static Future<void> initialize({
+    GlobalKey<NavigatorState>? navigatorKey,
+  }) async {
     try {
+      _navigatorKey = navigatorKey;
+
       // Request notification permissions for iOS
       await _firebaseMessaging.requestPermission(
         alert: true,
         badge: true,
         sound: true,
+      );
+
+      const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const darwinInit = DarwinInitializationSettings();
+      await _localNotifications.initialize(
+        const InitializationSettings(
+          android: androidInit,
+          iOS: darwinInit,
+        ),
+        onDidReceiveNotificationResponse: _onNotificationResponse,
       );
 
       // Get and print FCM token
@@ -34,8 +57,26 @@ class NotificationService {
         // Handle foreground notification display
       });
 
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        _openFromPayload(message.data['payload']?.toString());
+      });
+
       // Listen to background messages
       FirebaseMessaging.onBackgroundMessage(_backgroundMessageHandler);
+
+      _auth.authStateChanges().listen((user) {
+        if (user == null) {
+          _companionRequestSubscription?.cancel();
+          _companionRequestSubscription = null;
+          _shownCompanionRequestIds.clear();
+          return;
+        }
+        _startCompanionRequestListener(user.uid);
+      });
+
+      if (_auth.currentUser != null) {
+        _startCompanionRequestListener(_auth.currentUser!.uid);
+      }
     } catch (e) {
       debugPrint('Error initializing Firebase Messaging: $e');
     }
@@ -59,6 +100,70 @@ class NotificationService {
   /// Handle background messages
   static Future<void> _backgroundMessageHandler(RemoteMessage message) async {
     debugPrint('Background message received: ${message.notification?.title}');
+  }
+
+  static Future<void> _onNotificationResponse(
+    NotificationResponse response,
+  ) async {
+    _openFromPayload(response.payload);
+  }
+
+  static void _openFromPayload(String? payload) {
+    if (payload == null || payload.isEmpty) return;
+    if (!payload.startsWith('companion:')) return;
+
+    final nav = _navigatorKey?.currentState;
+    final context = _navigatorKey?.currentContext;
+    if (nav == null || context == null) return;
+
+    nav.push(
+      MaterialPageRoute(
+        builder: (_) => const CompanionPage(),
+      ),
+    );
+  }
+
+  static Future<void> _startCompanionRequestListener(String myUid) async {
+    await _companionRequestSubscription?.cancel();
+    _companionRequestSubscription = _firestore
+        .collection('companion_requests')
+        .where('status', isEqualTo: 'open')
+        .snapshots()
+        .listen((snapshot) {
+      for (final change in snapshot.docChanges) {
+        if (change.type != DocumentChangeType.added) continue;
+        final data = change.doc.data();
+        if (data == null) continue;
+        final hostUid = (data['hostUid'] ?? '').toString();
+        if (hostUid == myUid) continue;
+        final roomCode = (data['roomCode'] ?? change.doc.id).toString().toUpperCase();
+        final requestId = change.doc.id;
+        if (_shownCompanionRequestIds.contains(requestId)) continue;
+        _shownCompanionRequestIds.add(requestId);
+        _showCompanionRequestLocalNotification(roomCode: roomCode, id: requestId.hashCode);
+      }
+    });
+  }
+
+  static Future<void> _showCompanionRequestLocalNotification({
+    required String roomCode,
+    required int id,
+  }) async {
+    const androidDetails = AndroidNotificationDetails(
+      'companion_requests',
+      'Companion Requests',
+      channelDescription: 'Virtual walk-home request alerts',
+      importance: Importance.max,
+      priority: Priority.high,
+    );
+    const iOSDetails = DarwinNotificationDetails();
+    await _localNotifications.show(
+      id,
+      'Companion request',
+      'A student requested a virtual walk-home. Tap to join.',
+      const NotificationDetails(android: androidDetails, iOS: iOSDetails),
+      payload: 'companion:$roomCode',
+    );
   }
 
   /// Send emergency notification to a list of phone numbers
