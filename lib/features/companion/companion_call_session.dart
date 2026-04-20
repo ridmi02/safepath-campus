@@ -10,6 +10,7 @@ import 'companion_webrtc_ice.dart';
 
 typedef CompanionConnectionCallback = void Function(RTCPeerConnectionState state);
 typedef CompanionErrorCallback = void Function(String message);
+typedef CompanionWalkEndedCallback = void Function();
 
 /// WebRTC + Firestore signaling for a single companion call.
 ///
@@ -21,12 +22,14 @@ class CompanionCallSession {
     required this.isHost,
     this.onConnectionState,
     this.onError,
+    this.onWalkEnded,
   }) : roomId = roomId.trim().toUpperCase();
 
   final String roomId;
   final bool isHost;
   final CompanionConnectionCallback? onConnectionState;
   final CompanionErrorCallback? onError;
+  final CompanionWalkEndedCallback? onWalkEnded;
 
   final RTCVideoRenderer localRenderer = RTCVideoRenderer();
   final RTCVideoRenderer remoteRenderer = RTCVideoRenderer();
@@ -43,6 +46,7 @@ class CompanionCallSession {
   bool _remoteAnswerApplied = false;
   bool _remoteOfferApplied = false;
   bool _ended = false;
+  bool _walkEndedNotified = false;
 
   static Map<String, dynamic> get _rtcConfig => {
         'iceServers': buildCompanionIceServers(),
@@ -131,7 +135,7 @@ class CompanionCallSession {
       final data = snap.data();
       if (data == null) return;
       if ((data['status'] as String?) == 'ended') {
-        onError?.call('The walk ended.');
+        _notifyWalkEnded();
         return;
       }
       if (_remoteAnswerApplied) return;
@@ -164,7 +168,7 @@ class CompanionCallSession {
       final data = snap.data();
       if (data == null) return;
       if ((data['status'] as String?) == 'ended') {
-        onError?.call('The walk ended.');
+        _notifyWalkEnded();
         return;
       }
       if (_remoteOfferApplied) return;
@@ -289,10 +293,14 @@ class CompanionCallSession {
       await remoteRenderer.dispose();
     } catch (_) {}
 
-    if (isHost) {
-      try {
-        await CompanionRoomService.markRoomEnded(roomId);
-      } catch (_) {}
-    }
+    try {
+      await CompanionRoomService.markRoomEnded(roomId);
+    } catch (_) {}
+  }
+
+  void _notifyWalkEnded() {
+    if (_walkEndedNotified) return;
+    _walkEndedNotified = true;
+    onWalkEnded?.call();
   }
 }

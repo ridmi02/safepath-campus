@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 
 import 'firebase_options.dart';
+import 'services/notification_service.dart';
 import 'features/home/home_page.dart';
 import 'features/home/splash_screen.dart';
 import 'features/settings/data_sharing_policy_page.dart';
@@ -13,11 +14,14 @@ import 'features/profile/profile_page.dart';
 import 'features/companion/companion_page.dart';
 import 'theme/theme_provider.dart';
 
+final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await NotificationService.initialize(navigatorKey: appNavigatorKey);
 
   runApp(
     ChangeNotifierProvider(
@@ -116,6 +120,7 @@ class MyApp extends StatelessWidget {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
+          navigatorKey: appNavigatorKey,
           title: 'SafePath Campus',
           theme: lightTheme,
           darkTheme: darkTheme,
