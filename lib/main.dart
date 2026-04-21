@@ -9,9 +9,12 @@ import 'features/settings/data_sharing_policy_page.dart';
 import 'features/settings/settings_page.dart';
 import 'features/heatmap/campus_map_page.dart';
 import 'features/login/login_screen.dart';
+import 'features/login/forgot_password_screen.dart';
 import 'features/profile/profile_page.dart';
 import 'features/companion/companion_page.dart';
 import 'theme/theme_provider.dart';
+import 'features/registration/registration_provider.dart';
+import 'features/registration/registration_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,8 +23,11 @@ Future<void> main() async {
   );
 
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+      ],
       child: const MyApp(),
     ),
   );
@@ -124,6 +130,8 @@ class MyApp extends StatelessWidget {
           home: const SplashScreen(),
           routes: {
             '/login': (context) => const LoginScreen(),
+            '/forgot-password': (context) => const ForgotPasswordScreen(),
+            '/register': (context) => const RegistrationScreen(),
             '/home': (context) => const MyHomePage(),
             '/campus_map': (context) => const CampusMapPage(),
             '/settings': (context) => const SettingsPage(),

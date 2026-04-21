@@ -92,11 +92,30 @@ class AuthService {
 
   /// Sends a password-reset email to [email].
   /// Throws an error message string on failure.
+  /// For security, user-not-found is silently swallowed so callers always
+  /// show the same success message regardless of whether the email exists.
   Future<void> sendPasswordReset(String email) async {
     try {
-      await _auth.sendPasswordResetEmail(email: email);
+      // ignore: avoid_print
+      print("=== AUTH: Sending password reset to $email ===");
+      await _auth.sendPasswordResetEmail(email: email.trim());
+      // ignore: avoid_print
+      print("=== AUTH: Password reset email sent successfully ===");
     } on FirebaseAuthException catch (e) {
-      throw _mapAuthException(e);
+      // ignore: avoid_print
+      print("=== AUTH: Password reset error: ${e.code} ===");
+      if (e.code == 'user-not-found') {
+        // Do NOT reveal that the email doesn't exist - security measure
+        // ignore: avoid_print
+        print("=== AUTH: Email not found but showing success anyway (security) ===");
+        return;
+      } else if (e.code == 'invalid-email') {
+        throw 'Please enter a valid email address.';
+      } else if (e.code == 'too-many-requests') {
+        throw 'Too many requests. Please try again later.';
+      } else {
+        throw 'Failed to send reset email. Please try again.';
+      }
     } catch (e) {
       throw 'An unexpected error occurred. Please try again.';
     }
