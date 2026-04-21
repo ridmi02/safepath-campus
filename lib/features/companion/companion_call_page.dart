@@ -21,6 +21,7 @@ class CompanionCallPage extends StatefulWidget {
 class _CompanionCallPageState extends State<CompanionCallPage> {
   CompanionCallSession? _session;
   bool _starting = true;
+  bool _closing = false;
   String? _startError;
   RTCPeerConnectionState _pcState = RTCPeerConnectionState.RTCPeerConnectionStateNew;
 
@@ -41,6 +42,10 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
         if (!mounted || _session?.isEnded == true) return;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
       },
+      onWalkEnded: () {
+        if (!mounted) return;
+        _endFromRemote();
+      },
     );
 
     setState(() => _session = session);
@@ -59,6 +64,18 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
   }
 
   Future<void> _hangUp() async {
+    if (_closing) return;
+    _closing = true;
+    await _session?.endCall();
+    if (mounted) Navigator.of(context).pop();
+  }
+
+  Future<void> _endFromRemote() async {
+    if (_closing) return;
+    _closing = true;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Walk ended by the other participant.')),
+    );
     await _session?.endCall();
     if (mounted) Navigator.of(context).pop();
   }
