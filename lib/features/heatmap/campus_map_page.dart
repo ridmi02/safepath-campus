@@ -493,7 +493,7 @@ class _CampusMapPageState extends State<CampusMapPage> {
               ),
               const SizedBox(height: 12),
               const Text(
-                'Description (optional)',
+                'Description (required)',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
@@ -515,15 +515,54 @@ class _CampusMapPageState extends State<CampusMapPage> {
                   const Spacer(),
                   FilledButton(
                     onPressed: () async {
+                      final description = descriptionController.text.trim();
+                      final hasAlphaNumeric =
+                          RegExp(r'[A-Za-z0-9]').hasMatch(description);
+
+                      if (description.isEmpty) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Description is required.'),
+                            ),
+                          );
+                        }
+                        return;
+                      }
+
+                      if (description.length < 10) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Description must be at least 10 characters.',
+                              ),
+                            ),
+                          );
+                        }
+                        return;
+                      }
+
+                      if (!hasAlphaNumeric) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Description cannot contain only symbols or spaces.',
+                              ),
+                            ),
+                          );
+                        }
+                        return;
+                      }
+
                       final incident = Incident(
                         id: 'user_${now.microsecondsSinceEpoch}',
                         type: selectedType,
                         severity: selectedSeverity,
                         location: point,
                         timestamp: now,
-                        description: descriptionController.text.trim().isEmpty
-                            ? null
-                            : descriptionController.text.trim(),
+                        description: description,
                         verified: false,
                       );
                       try {
