@@ -10,23 +10,6 @@ import 'package:safepath_campus/models/incident.dart';
 import 'package:safepath_campus/services/incident_service.dart';
 import 'package:safepath_campus/services/location_service.dart';
 
-/// Enhances contrast for better road visibility on dark backgrounds
-/// while preserving natural colors of Carto Voyager tiles.
-const _kMapRoadContrastMatrix = <double>[
-  1.25, 0, 0, 0, -5,   // Red: slight boost, minimal darkening
-  0, 1.25, 0, 0, -5,   // Green: slight boost, minimal darkening
-  0, 0, 1.2, 0, -8,    // Blue: slight boost, minimal darkening
-  0, 0, 0, 1, 0,
-];
-
-/// Night mode: adds warmth and slight saturation boost
-const _kMapNightSaturationMatrix = <double>[
-  1.15, 0, 0, 0, 8,    // Red: slight warmth boost
-  0, 1.1, 0, 0, 4,     // Green: subtle boost
-  0, 0, 1.05, 0, -2,   // Blue: slight cool down
-  0, 0, 0, 1, 0,
-];
-
 class _RouteChoice {
   const _RouteChoice({
     required this.displayPoints,
@@ -107,12 +90,12 @@ class _CampusMapPageState extends State<CampusMapPage> {
   static const List<SafePoint> _fallbackSafePoints = [
     SafePoint(
       id: 'sp_1',
-      name: 'Security Office',
+      name: 'Police Station - Campus Gate',
       location: LatLng(6.9271, 79.8612),
     ),
     SafePoint(
       id: 'sp_2',
-      name: 'Medical Center',
+      name: 'Police Post - Main Road',
       location: LatLng(6.9262, 79.8624),
     ),
     SafePoint(
@@ -493,7 +476,7 @@ class _CampusMapPageState extends State<CampusMapPage> {
               ),
               const SizedBox(height: 12),
               const Text(
-                'Description (optional)',
+                'Description (required)',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
@@ -515,15 +498,54 @@ class _CampusMapPageState extends State<CampusMapPage> {
                   const Spacer(),
                   FilledButton(
                     onPressed: () async {
+                      final description = descriptionController.text.trim();
+                      final hasAlphaNumeric =
+                          RegExp(r'[A-Za-z0-9]').hasMatch(description);
+
+                      if (description.isEmpty) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Description is required.'),
+                            ),
+                          );
+                        }
+                        return;
+                      }
+
+                      if (description.length < 10) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Description must be at least 10 characters.',
+                              ),
+                            ),
+                          );
+                        }
+                        return;
+                      }
+
+                      if (!hasAlphaNumeric) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Description cannot contain only symbols or spaces.',
+                              ),
+                            ),
+                          );
+                        }
+                        return;
+                      }
+
                       final incident = Incident(
                         id: 'user_${now.microsecondsSinceEpoch}',
                         type: selectedType,
                         severity: selectedSeverity,
                         location: point,
                         timestamp: now,
-                        description: descriptionController.text.trim().isEmpty
-                            ? null
-                            : descriptionController.text.trim(),
+                        description: description,
                         verified: false,
                       );
                       try {
@@ -613,28 +635,51 @@ class _CampusMapPageState extends State<CampusMapPage> {
         if (jsonRes['routes'] != null &&
             (jsonRes['routes'] as List).isNotEmpty) {
           final routes = (jsonRes['routes'] as List).cast<Map<String, dynamic>>();
-          final choice = _pickRouteChoice(routes);
+          final fastFromServer = _decodeRouteGeometry(routes.first);
+          _RouteChoice? choice = _pickRouteChoice(routes);
+
+          if (_safeRouteMode && choice != null) {
+            final baseline =
+                choice.baselinePoints?.isNotEmpty == true
+                    ? choice.baselinePoints!
+                    : fastFromServer;
+            final sameAsFast =
+                baseline.isNotEmpty &&
+                !_routesGeometricallyDifferent(baseline, choice.displayPoints);
+            if (sameAsFast) {
+              final forced = await _buildForcedSafeDetourChoice(
+                profile: profile,
+                fastPts: baseline,
+              );
+              if (forced != null) {
+                choice = forced;
+              }
+            }
+          }
+
           if (choice != null) {
-            final routeDistanceKm = _computeRouteDistanceKm(choice.displayPoints);
+            final selectedChoice = choice;
+            final routeDistanceKm = _computeRouteDistanceKm(selectedChoice.displayPoints);
 
             setState(() {
-              _routePoints = choice.displayPoints;
-              _fastRoutePoints = choice.baselinePoints ?? [];
+              _routePoints = selectedChoice.displayPoints;
+              _fastRoutePoints = selectedChoice.baselinePoints ?? [];
               _routeDistanceKm = routeDistanceKm;
-              _routeRiskScore = choice.riskScore;
-              _routeModeLabel = choice.label;
-              _incidentsOnDisplayedRoute = choice.displayIncidentCount;
-              _incidentsOnFastRoute = choice.fastIncidentCount;
-              _showGreenRouteLine = choice.showGreenRoute;
+              _routeRiskScore = selectedChoice.riskScore;
+              _routeModeLabel = selectedChoice.label;
+              _incidentsOnDisplayedRoute = selectedChoice.displayIncidentCount;
+              _incidentsOnFastRoute = selectedChoice.fastIncidentCount;
+              _showGreenRouteLine = selectedChoice.showGreenRoute;
             });
-            if (choice.messageToUser != null && mounted) {
+            if (selectedChoice.messageToUser != null && mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(choice.messageToUser!)),
+                SnackBar(content: Text(selectedChoice.messageToUser!)),
               );
             }
             final boundsPoints = <LatLng>[
-              ...choice.displayPoints,
-              if (choice.baselinePoints != null) ...choice.baselinePoints!,
+              ...selectedChoice.displayPoints,
+              if (selectedChoice.baselinePoints != null)
+                ...selectedChoice.baselinePoints!,
             ];
             if (boundsPoints.isNotEmpty) {
               _mapController.fitCamera(
@@ -654,6 +699,79 @@ class _CampusMapPageState extends State<CampusMapPage> {
     setState(() {
       _loadingRoute = false;
     });
+  }
+
+  Future<List<LatLng>> _fetchOsrmRoutePoints({
+    required LatLng from,
+    required LatLng to,
+    required String profile,
+  }) async {
+    final src = '${from.longitude},${from.latitude}';
+    final dst = '${to.longitude},${to.latitude}';
+    final url = Uri.parse(
+      'https://router.project-osrm.org/route/v1/$profile/$src;$dst'
+      '?overview=full&geometries=geojson&alternatives=false',
+    );
+
+    final res = await http.get(url);
+    if (res.statusCode != 200) return [];
+    final jsonRes = jsonDecode(res.body) as Map<String, dynamic>;
+    final routes = jsonRes['routes'] as List<dynamic>?;
+    if (routes == null || routes.isEmpty) return [];
+    return _decodeRouteGeometry(routes.first as Map<String, dynamic>);
+  }
+
+  Future<_RouteChoice?> _buildForcedSafeDetourChoice({
+    required String profile,
+    required List<LatLng> fastPts,
+  }) async {
+    if (_currentLocation == null || _destination == null || _safePoints.isEmpty) {
+      return null;
+    }
+
+    const distance = Distance();
+    final candidates = [..._safePoints]
+      ..sort(
+        (a, b) => distance(_currentLocation!, a.location)
+            .compareTo(distance(_currentLocation!, b.location)),
+      );
+
+    for (final safePoint in candidates) {
+      // Skip if the safe point is effectively the same destination.
+      if (distance(_destination!, safePoint.location) < 60) continue;
+
+      final leg1 = await _fetchOsrmRoutePoints(
+        from: _currentLocation!,
+        to: safePoint.location,
+        profile: profile,
+      );
+      final leg2 = await _fetchOsrmRoutePoints(
+        from: safePoint.location,
+        to: _destination!,
+        profile: profile,
+      );
+      if (leg1.length < 2 || leg2.length < 2) continue;
+
+      final combined = <LatLng>[...leg1, ...leg2.skip(1)];
+      if (!_routesGeometricallyDifferent(fastPts, combined)) continue;
+
+      final inc = _countDistinctIncidentsNearRoute(combined);
+      final fastInc = _countDistinctIncidentsNearRoute(fastPts);
+      final risk = _estimateRouteRiskScore(combined);
+
+      return _RouteChoice(
+        displayPoints: combined,
+        baselinePoints: fastPts,
+        displayIncidentCount: inc,
+        fastIncidentCount: fastInc,
+        riskScore: risk,
+        label: 'Safer route',
+        showGreenRoute: true,
+        messageToUser: 'Safe route adjusted via nearest safe point.',
+      );
+    }
+
+    return null;
   }
 
   double _computeRouteDistanceKm(List<LatLng> points) {
@@ -795,7 +913,7 @@ class _CampusMapPageState extends State<CampusMapPage> {
     if (decoded.length < 2) {
       return _RouteChoice(
         displayPoints: fastPts,
-        baselinePoints: null,
+        baselinePoints: fastPts,
         displayIncidentCount: fastInc,
         fastIncidentCount: fastInc,
         riskScore: fastRisk,
@@ -820,7 +938,7 @@ class _CampusMapPageState extends State<CampusMapPage> {
     if (candidates.isEmpty) {
       return _RouteChoice(
         displayPoints: fastPts,
-        baselinePoints: null,
+        baselinePoints: fastPts,
         displayIncidentCount: fastInc,
         fastIncidentCount: fastInc,
         riskScore: fastRisk,
@@ -881,7 +999,7 @@ class _CampusMapPageState extends State<CampusMapPage> {
 
     return _RouteChoice(
       displayPoints: fastPts,
-      baselinePoints: null,
+      baselinePoints: fastPts,
       displayIncidentCount: fastInc,
       fastIncidentCount: fastInc,
       riskScore: fastRisk,
@@ -921,12 +1039,30 @@ class _CampusMapPageState extends State<CampusMapPage> {
     return 1.0;
   }
 
+  bool _isPolicePoint(SafePoint point) {
+    final name = point.name.toLowerCase();
+    return name.contains('police') || name.contains('station');
+  }
+
   Future<void> _routeToNearestSafePoint() async {
     if (_currentLocation == null) return;
+
+    final policePoints = _safePoints.where(_isPolicePoint).toList();
+    if (policePoints.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No police stations available on the map.'),
+          ),
+        );
+      }
+      return;
+    }
+
     const distance = Distance();
     LatLng? nearest;
     double? nearestMeters;
-    for (final p in _safePoints) {
+    for (final p in policePoints) {
       final m = distance(_currentLocation!, p.location);
       if (nearestMeters == null || m < nearestMeters) {
         nearestMeters = m;
@@ -937,7 +1073,9 @@ class _CampusMapPageState extends State<CampusMapPage> {
       await _setDestination(nearest);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('SOS route set to nearest safe point')),
+          const SnackBar(
+            content: Text('SOS route set to nearest police station'),
+          ),
         );
       }
     }
@@ -1344,25 +1482,41 @@ class _CampusMapPageState extends State<CampusMapPage> {
       markers.add(
         Marker(
           point: safePoint.location,
-          width: 120,
-          height: 34,
-          child: Row(
-            children: [
-              const Icon(Icons.shield, color: Colors.green, size: 22),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  safePoint.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+          width: 160,
+          height: 40,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.96),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: Colors.black12),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.shield, color: Colors.green, size: 18),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    safePoint.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black87,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       );
@@ -1390,8 +1544,14 @@ class _CampusMapPageState extends State<CampusMapPage> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Campus Map')),
-      backgroundColor: const Color(0xFF0D1B2A), // Always use dark background for map
+      appBar: AppBar(
+        title: const Text('Campus Map'),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        elevation: 1,
+        surfaceTintColor: Colors.white,
+      ),
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
           FlutterMap(
@@ -1411,8 +1571,7 @@ class _CampusMapPageState extends State<CampusMapPage> {
             ),
             children: [
                 TileLayer(
-                  // Use CartoDB Positron for better contrast on dark backgrounds
-                  // Positron has clean black text on light backgrounds, but we'll invert it
+                  // Use a clean light basemap so labels and streets stay readable.
                   urlTemplate:
                     'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
                   subdomains: const ['a', 'b', 'c', 'd'],
@@ -1420,33 +1579,7 @@ class _CampusMapPageState extends State<CampusMapPage> {
                   retinaMode: MediaQuery.devicePixelRatioOf(context) > 1.0,
                   // Keep nearby tiles in memory while panning for smoother UX.
                   keepBuffer: 5,
-                  // Apply color inversion and contrast enhancement for dark theme
-                  tileBuilder: (context, tileWidget, tile) {
-                    // First invert colors to make light map dark
-                    Widget child = ColorFiltered(
-                      colorFilter: const ColorFilter.matrix(<double>[
-                        -1, 0, 0, 0, 255,  // Invert red
-                        0, -1, 0, 0, 255,  // Invert green
-                        0, 0, -1, 0, 255,  // Invert blue
-                        0, 0, 0, 1, 0,     // Alpha unchanged
-                      ]),
-                      child: tileWidget,
-                    );
-                    // Then apply contrast enhancement
-                    child = ColorFiltered(
-                      colorFilter: const ColorFilter.matrix(_kMapRoadContrastMatrix),
-                      child: child,
-                    );
-                    // Apply night mode saturation if needed
-                    if (_useNightTiles) {
-                      child = ColorFiltered(
-                        colorFilter:
-                            const ColorFilter.matrix(_kMapNightSaturationMatrix),
-                        child: child,
-                      );
-                    }
-                    return child;
-                  },
+                  tileBuilder: (context, tileWidget, tile) => tileWidget,
                 ),
               if (_showHeatmap)
                 CircleLayer(circles: _buildHeatmapCircles()),
@@ -1465,17 +1598,23 @@ class _CampusMapPageState extends State<CampusMapPage> {
               children: [
                 Material(
                   elevation: 4,
+                  color: Colors.white.withValues(alpha: 0.98),
                   borderRadius: BorderRadius.circular(8),
                   child: Row(
                     children: [
                       Expanded(
                         child: TextField(
                           controller: _searchController,
+                          style: const TextStyle(
+                            color: Colors.black87,
+                            fontWeight: FontWeight.w600,
+                          ),
                           decoration: const InputDecoration(
                             hintText: 'Search destination',
+                            hintStyle: TextStyle(color: Colors.black54),
                             contentPadding: EdgeInsets.symmetric(
                               horizontal: 12,
-                              vertical: 8,
+                              vertical: 12,
                             ),
                             border: InputBorder.none,
                           ),
@@ -1564,6 +1703,7 @@ class _CampusMapPageState extends State<CampusMapPage> {
                 if (_suggestions.isNotEmpty)
                   Material(
                     elevation: 4,
+                    color: Colors.white,
                     child: Container(
                       width: double.infinity,
                       constraints: const BoxConstraints(maxHeight: 250),
@@ -1585,6 +1725,10 @@ class _CampusMapPageState extends State<CampusMapPage> {
                               name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.black87,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                             onTap: () {
                               if (lat != null && lon != null) {
@@ -1615,7 +1759,7 @@ class _CampusMapPageState extends State<CampusMapPage> {
           if (_loadingRoute)
             Positioned.fill(
               child: Container(
-                color: Colors.black.withAlpha((0.3 * 255).round()),
+                color: Colors.white.withAlpha((0.55 * 255).round()),
                 child: const Center(
                   child: CircularProgressIndicator(),
                 ),
@@ -1632,7 +1776,7 @@ class _CampusMapPageState extends State<CampusMapPage> {
           FloatingActionButton(
             onPressed: _routeToNearestSafePoint,
             mini: true,
-            tooltip: 'SOS route to nearest safe point',
+            tooltip: 'SOS route to nearest police station',
             backgroundColor: Colors.orange,
             child: const Icon(Icons.emergency),
           ),
